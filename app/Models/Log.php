@@ -13,4 +13,9 @@ class Log extends Model
         'usuario_id', 'accion', 'tabla', 'item_id', 
         'descripcion', 'fecha'
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
 }

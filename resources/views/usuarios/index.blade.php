@@ -90,10 +90,11 @@
                             <i class="fa-solid fa-pen-to-square"></i> Editar
                         </a>
                         @if(!$esMiCuenta)
-                        <form action="{{ route('usuarios.destroy', $u->id) }}" method="POST" style="display:inline-block; margin:0;" onsubmit="return confirm('¿Eliminar al usuario {{ $u->nombre }}? Esta acción no se puede deshacer.');">
+                        <form action="{{ route('usuarios.destroy', $u->id) }}" method="POST" style="display:inline-block; margin:0;"
+                              onsubmit="return confirm('Eliminar al {{ $u->rol }}: {{ addslashes($u->nombre) }} (@{{ $u->usuario }}). Esta accion quedara registrada en el log y no se puede deshacer.');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid #EF4444; padding: 0.4rem 0.85rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; cursor:pointer;">
+                            <button type="submit" style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(239,68,68,0.1); color: #EF4444; border: 1px solid #EF4444; padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.85rem; cursor:pointer;">
                                 <i class="fa-solid fa-trash"></i> Eliminar
                             </button>
                         </form>

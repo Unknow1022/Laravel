@@ -11,7 +11,7 @@ class Vale extends Model
     
     protected $fillable = [
         'codigo_vale', 'trabajador_id', 'usuario_id', 
-        'fecha_creacion', 'fecha_limite', 'estado'
+        'fecha_creacion', 'fecha_limite', 'estado', 'notificado_retraso'
     ];
 
     public function trabajador() {

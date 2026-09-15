@@ -6,13 +6,21 @@ use App\Models\Herramienta;
 use App\Models\Trabajador;
 use App\Models\Vale;
 use App\Models\Almacen;
+use App\Services\NotificacionRetrasoService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(\App\Services\AIService $aiService)
+    public function index(\App\Services\AIService $aiService, NotificacionRetrasoService $notificador)
     {
+        // Verificar vales retrasados y enviar notificaciones de correo si es necesario
+        try {
+            $notificador->verificarYNotificar();
+        } catch (\Exception $e) {
+            \Log::warning("[Dashboard] No se pudo ejecutar NotificacionRetrasoService: " . $e->getMessage());
+        }
+
         $totalStock = Herramienta::sum('stock_total') ?: 0;
         $totalTrabajadores = Trabajador::where('estado', 'Activo')->count();
         $almacenes = Almacen::withCount('herramientas')->get();
@@ -36,7 +44,8 @@ class DashboardController extends Controller
             ];
         }
 
-        $todas = Herramienta::orderBy('creado_en', 'desc')->get();
+        $todas = Herramienta::orderByDesc('id')->get();
+
         $recent = $todas->take(8);
 
         $stock_disponible = Herramienta::sum('stock_disponible') ?: 0;

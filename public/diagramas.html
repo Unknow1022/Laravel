@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramas del Sistema de Almacén | Documentación Técnica</title>
+    <meta name="description" content="Documentación técnica: ERD, UML de Clases, Casos de Uso y Diagramas de Estado del Sistema de Almacén.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #070d1f;
+            --bg2: #0d1530;
+            --card: rgba(13,20,45,0.95);
+            --glass: rgba(255,255,255,0.04);
+            --border: rgba(255,255,255,0.09);
+            --p: #7c3aed;
+            --s: #06b6d4;
+            --g: #10b981;
+            --o: #f97316;
+            --r: #ef4444;
+            --y: #f59e0b;
+            --txt: #f1f5f9;
+            --txt2: #94a3b8;
+            --txt3: #475569;
+            --rad: 14px;
+            --t: all .25s cubic-bezier(.4,0,.2,1);
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        html{scroll-behavior:smooth}
+        body{
+            font-family:'Inter',system-ui,sans-serif;
+            background:var(--bg);
+            color:var(--txt);
+            min-height:100vh;
+        }
+        /* ── Glow orbs ── */
+        body::before,body::after{
+            content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+        }
+        body::before{
+            width:800px;height:800px;
+            background:radial-gradient(circle,rgba(124,58,237,.1) 0%,transparent 65%);
+            top:-250px;left:-250px;
+        }
+        body::after{
+            width:700px;height:700px;
+            background:radial-gradient(circle,rgba(6,182,212,.07) 0%,transparent 65%);
+            bottom:-200px;right:-200px;
+        }
+
+        /* ════ HEADER ════ */
+        .hdr{
+            position:relative;z-index:10;
+            padding:28px 40px 0;
+            display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+        }
+        .hdr-brand{display:flex;align-items:center;gap:13px}
+        .brand-ico{
+            width:50px;height:50px;
+            background:linear-gradient(135deg,var(--p),var(--s));
+            border-radius:14px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:22px;
+            box-shadow:0 0 24px rgba(124,58,237,.4);
+            flex-shrink:0;
+        }
+        .brand-txt h1{
+            font-size:20px;font-weight:800;
+            background:linear-gradient(135deg,#fff 30%,var(--s) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .brand-txt p{font-size:11px;color:var(--txt3);margin-top:3px;letter-spacing:.4px}
+        .badges{display:flex;gap:7px;flex-wrap:wrap}
+        .badge{
+            display:inline-flex;align-items:center;gap:5px;
+            padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;
+            letter-spacing:.4px;border:1px solid;
+        }
+        .bl{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5}
+        .bm{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:#67e8f9}
+        .bv{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);color:#c4b5fd}
+
+        /* ════ HERO ════ */
+        .hero{
+            position:relative;z-index:10;
+            text-align:center;padding:36px 40px 0;
+        }
+        .hero h2{
+            font-size:clamp(24px,4vw,42px);font-weight:800;line-height:1.15;
+            background:linear-gradient(135deg,#f1f5f9 20%,var(--p) 60%,var(--s) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+        }
+        .hero p{margin-top:10px;color:var(--txt2);font-size:14px;max-width:560px;margin-left:auto;margin-right:auto}
+
+        /* ════ TABS ════ */
+        .tabs{position:relative;z-index:10;padding:32px 40px 0}
+        .tabs-nav{
+            display:flex;gap:5px;
+            background:var(--glass);border:1px solid var(--border);
+            border-radius:calc(var(--rad)+4px);padding:5px;flex-wrap:wrap;
+        }
+        .tab{
+            flex:1;min-width:140px;
+            display:flex;align-items:center;justify-content:center;gap:7px;
+            padding:11px 14px;border:none;border-radius:var(--rad);
+            background:transparent;color:var(--txt2);
+            font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+            cursor:pointer;transition:var(--t);white-space:nowrap;
+        }
+        .tab:hover{color:var(--txt);background:rgba(255,255,255,.06)}
+        .tab.active{color:#fff;box-shadow:0 2px 16px rgba(0,0,0,.35)}
+        .tab[data-tab="erd"].active{background:linear-gradient(135deg,#0891b2,var(--s))}
+        .tab[data-tab="uml"].active{background:linear-gradient(135deg,var(--p),#a78bfa)}
+        .tab[data-tab="uc"].active{background:linear-gradient(135deg,#059669,var(--g))}
+        .tab[data-tab="st"].active{background:linear-gradient(135deg,#c2410c,var(--o))}
+        .ti{font-size:16px}
+
+        /* ════ PANELS ════ */
+        .main{position:relative;z-index:10;padding:22px 40px 60px}
+        .panel{display:none;animation:fadeUp .35s ease}
+        .panel.active{display:block}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+        .ph{
+            display:flex;align-items:flex-start;justify-content:space-between;
+            gap:18px;flex-wrap:wrap;margin-bottom:18px;
+        }
+        .pt{display:flex;align-items:center;gap:11px}
+        .ptico{
+            width:42px;height:42px;border-radius:11px;
+            display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;
+        }
+        .ico-erd{background:linear-gradient(135deg,#0891b2,var(--s));box-shadow:0 0 18px rgba(6,182,212,.3)}
+        .ico-uml{background:linear-gradient(135deg,var(--p),#a78bfa);box-shadow:0 0 18px rgba(124,58,237,.3)}
+        .ico-uc{background:linear-gradient(135deg,#059669,var(--g));box-shadow:0 0 18px rgba(16,185,129,.3)}
+        .ico-st{background:linear-gradient(135deg,#c2410c,var(--o));box-shadow:0 0 18px rgba(249,115,22,.3)}
+        .pt h3{font-size:18px;font-weight:700}
+        .pt p{font-size:11px;color:var(--txt2);margin-top:2px}
+
+        .xbtns{display:flex;gap:7px;flex-wrap:wrap}
+        .xbtn{
+            display:inline-flex;align-items:center;gap:5px;
+            padding:8px 14px;border-radius:8px;
+            border:1px solid var(--border);background:var(--glass);
+            color:var(--txt2);font-family:'Inter',sans-serif;
+            font-size:11px;font-weight:600;cursor:pointer;transition:var(--t);
+        }
+        .xbtn:hover{background:rgba(255,255,255,.07);color:var(--txt);transform:translateY(-1px)}
+
+        /* ── Diagram Card ── */
+        .dcard{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:var(--rad);padding:28px;
+            overflow:auto;backdrop-filter:blur(20px);
+            box-shadow:0 4px 40px rgba(0,0,0,.5);
+            min-height:450px;position:relative;
+        }
+
+        /* Loading */
+        .lov{
+            position:absolute;inset:0;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            gap:12px;border-radius:var(--rad);background:var(--card);z-index:5;
+            transition:opacity .5s;
+        }
+        .lov.gone{opacity:0;pointer-events:none}
+        .spin{
+            width:36px;height:36px;
+            border:3px solid rgba(124,58,237,.2);
+            border-top-color:var(--p);border-radius:50%;
+            animation:rot .7s linear infinite;
+        }
+        @keyframes rot{to{transform:rotate(360deg)}}
+        .lov span{color:var(--txt2);font-size:12px}
+
+        /* Error */
+        .merr{color:var(--r);padding:24px;text-align:center;font-size:13px;line-height:1.6}
+
+        /* Chips */
+        .chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+        .chip{
+            display:inline-flex;align-items:center;gap:5px;
+            padding:4px 10px;background:var(--glass);border:1px solid var(--border);
+            border-radius:20px;font-size:11px;color:var(--txt2);
+        }
+        .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+        /* ── Mermaid overrides ── */
+        .mermaid{display:flex;justify-content:center;min-height:100px}
+        .mermaid svg{max-width:100%;height:auto;border-radius:6px}
+
+        /* ════ FOOTER ════ */
+        footer{
+            position:relative;z-index:10;
+            text-align:center;padding:0 40px 36px;
+            color:var(--txt3);font-size:11px;
+        }
+        footer strong{color:var(--txt2)}
+
+        @media(max-width:768px){
+            .hdr,.tabs,.main,.hero{padding-left:16px;padding-right:16px}
+            .tab{min-width:110px;font-size:11px}
+            .dcard{padding:14px}
+        }
+        /* ── B/N print mode overrides ── */
+        body.print-mode {
+            --bg: #ffffff;
+            --bg2: #f8fafc;
+            --card: #ffffff;
+            --glass: #f1f5f9;
+            --border: #94a3b8;
+            --txt: #0f172a;
+            --txt2: #334155;
+            --txt3: #64748b;
+        }
+        body.print-mode::before, body.print-mode::after {
+            display: none;
+        }
+        body.print-mode .xbtn {
+            border-color: #94a3b8;
+            color: #0f172a;
+            background: #ffffff;
+        }
+        body.print-mode .xbtn:hover {
+            background: #f1f5f9;
+        }
+        body.print-mode .tab {
+            color: #475569;
+        }
+        body.print-mode .tab.active {
+            color: #ffffff;
+        }
+        body.print-mode .dcard {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="print-mode">
+
+<!-- HEADER -->
+<header class="hdr">
+    <div class="hdr-brand">
+        <div class="brand-ico">🏗️</div>
+        <div class="brand-txt">
+            <h1>Sistema de Almacén</h1>
+            <p>Documentación Técnica · Diagramas del Sistema</p>
+        </div>
+    </div>
+    <div class="badges">
+        <span class="badge bl">⚡ Laravel 11</span>
+        <span class="badge bm">🗄️ MySQL</span>
+        <span class="badge bv">📊 Mermaid.js</span>
+        <button id="bn-toggle" class="badge" style="background:var(--p); border-color:var(--p); color:#fff; cursor:pointer; font-weight:700;">🌓 Modo Oscuro</button>
+    </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+    <h2>Arquitectura &amp; Modelado del Sistema</h2>
+    <p>Diagramas generados desde el código fuente. Exportables en PNG de alta resolución y SVG vectorial.</p>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+    <nav class="tabs-nav" role="tablist">
+        <button class="tab active" data-tab="erd" role="tab" aria-selected="true">
+            <span class="ti">🗃️</span><span>Entidad–Relación</span>
+        </button>
+        <button class="tab" data-tab="uml" role="tab" aria-selected="false">
+            <span class="ti">🧩</span><span>Clases UML</span>
+        </button>
+        <button class="tab" data-tab="uc" role="tab" aria-selected="false">
+            <span class="ti">👥</span><span>Casos de Uso</span>
+        </button>
+        <button class="tab" data-tab="st" role="tab" aria-selected="false">
+            <span class="ti">🔄</span><span>Diagramas de Estado</span>
+        </button>
+    </nav>
+</div>
+
+<!-- PANELS -->
+<main class="main">
+
+<!-- ═══════════ ERD ═══════════ -->
+<section class="panel active" id="panel-erd">
+    <div class="ph">
+        <div class="pt">
+            <div class="ptico ico-erd">🗃️</div>
+            <div>
+                <h3>Diagrama Entidad–Relación (ERD)</h3>
+                <p>11 tablas · 14 relaciones FK · Tipos de datos completos</p>
+            </div>
+        </div>
+        <div class="xbtns">
+            <button class="xbtn" onclick="dlSVG('card-erd','ERD_SistemaAlmacen')">⬇ SVG</button>
+            <button class="xbtn" onclick="dlPNG('card-erd','ERD_SistemaAlmacen')">🖼️ PNG</button>
+            <button class="xbtn" onclick="dlPDF('card-erd','ERD_SistemaAlmacen')">📄 PDF</button>
+        </div>
+    </div>
+    
+    <!-- Resumen del ERD -->
+    <div style="background:var(--glass); border:1px solid var(--border); padding:16px; border-radius:12px; margin-bottom:18px; font-size:12px; line-height:1.6; color:var(--txt2);">
+        <strong style="color:var(--txt); display:block; margin-bottom:6px; font-size:13px;">📝 Resumen del Diagrama Entidad-Relación:</strong>
+        Este diagrama modela la base de datos MySQL de todo el sistema. Consta de <strong>11 entidades</strong> clave: 
+        <span style="color:var(--s);">Usuarios</span> (roles y credenciales), 
+        <span style="color:var(--s);">Trabajadores</span> (personal operativo), 
+        <span style="color:var(--s);">Almacenes</span> (ubicaciones físicas de almacenamiento), 
+        <span style="color:var(--s);">Categorías</span> (clasificación de herramientas por almacén), 
+        <span style="color:var(--s);">Herramientas</span> (inventario físico con stock), 
+        <span style="color:var(--s);">Vales</span> y <span style="color:var(--s);">Vale Detalles</span> (préstamos y cantidades asociadas), 
+        <span style="color:var(--s);">Incidencias</span> (daños, pérdidas y sanciones disciplinarias), 
+        <span style="color:var(--s);">Mantenimientos</span> (reparaciones preventivas y correctivas), 
+        <span style="color:var(--s);">Préstamos</span> (registro directo e histórico) y 
+        <span style="color:var(--s);">Logs</span> (auditoría de acciones). 
+        Las relaciones Crow's Foot indican la cardinalidad, como la dependencia de <em>Categorías</em> y <em>Herramientas</em> hacia un <em>Almacén</em>, y la trazabilidad de los préstamos vinculados a un <em>Trabajador</em> y al <em>Usuario</em> (almacenero) que los registró.
+    </div>
+    <div class="dcard" id="card-erd">
+        <div class="lov" id="lov-erd"><div class="spin"></div><span>Renderizando ERD…</span></div>
+        <div class="mermaid" id="m-erd">
+erDiagram
+    USUARIOS {
+        bigint id PK
+        varchar nombre
+        varchar usuario
+        varchar password
+        enum rol
+        timestamp creado_en
+    }
+    ALMACENES {
+        bigint id PK
+        varchar nombre
+        varchar ubicacion_general
+        text descripcion
+        timestamp deleted_at
+    }
+    CATEGORIAS {
+        bigint id PK
+        bigint almacen_id FK
+        varchar nombre
+        text descripcion
+    }
+    HERRAMIENTAS {
+        bigint id PK
+        bigint almacen_id FK
+        bigint categoria_id FK
+        varchar codigo
+        varchar nombre
+        enum estado
+        varchar ubicacion
+        varchar seccion
+        int stock_total
+        int stock_disponible
+        int stock_minimo
+        json metadata
+        timestamp creado_en
+        timestamp deleted_at
+    }
+    TRABAJADORES {
+        bigint id PK
+        varchar dni
+        varchar nombre
+        varchar apellidos
+        varchar cargo
+        enum estado
+        timestamp creado_en
+        timestamp deleted_at
+    }
+    VALES {
+        bigint id PK
+        varchar codigo_vale
+        bigint trabajador_id FK
+        bigint usuario_id FK
+        timestamp fecha_creacion
+        timestamp fecha_limite
+        enum estado
+        boolean notificado_retraso
+    }
+    VALE_DETALLES {
+        bigint id PK
+        bigint vale_id FK
+        bigint herramienta_id FK
+        int cantidad_prestada
+        int cantidad_devuelta
+    }
+    INCIDENCIAS {
+        bigint id PK
+        bigint herramienta_id FK
+        bigint usuario_id FK
+        bigint trabajador_id FK
+        bigint vale_id FK
+        timestamp fecha
+        varchar tipo
+        text descripcion
+        decimal monto_sancion
+        boolean reparado
+        varchar gravedad
+        varchar estado_disciplinario
+    }
+    MANTENIMIENTOS {
+        bigint id PK
+        bigint herramienta_id FK
+        bigint usuario_id FK
+        timestamp fecha_inicio
+        timestamp fecha_fin
+        text descripcion
+        decimal costo
+        enum estado
+    }
+    PRESTAMOS {
+        bigint id PK
+        bigint herramienta_id FK
+        bigint trabajador_id FK
+        bigint usuario_id FK
+        timestamp fecha_prestamo
+        timestamp fecha_devolucion_real
+        enum estado
+    }
+    LOGS {
+        bigint id PK
+        bigint usuario_id FK
+        varchar accion
+        varchar tabla
+        bigint item_id
+        text descripcion
+        timestamp fecha
+    }
+
+    ALMACENES    ||--o{ CATEGORIAS     : "contiene"
+    ALMACENES    ||--o{ HERRAMIENTAS   : "almacena"
+    CATEGORIAS   ||--o{ HERRAMIENTAS   : "agrupa"
+    TRABAJADORES ||--o{ VALES          : "solicita"
+    USUARIOS     ||--o{ VALES          : "registra"
+    VALES        ||--o{ VALE_DETALLES  : "incluye"
+    HERRAMIENTAS ||--o{ VALE_DETALLES  : "detallada en"
+    HERRAMIENTAS ||--o{ INCIDENCIAS    : "involucrada en"
+    HERRAMIENTAS ||--o{ MANTENIMIENTOS : "requiere"
+    HERRAMIENTAS ||--o{ PRESTAMOS      : "prestada en"
+    TRABAJADORES ||--o{ PRESTAMOS      : "realiza"
+    TRABAJADORES ||--o{ INCIDENCIAS    : "genera"
+    USUARIOS     ||--o{ MANTENIMIENTOS : "supervisa"
+    USUARIOS     ||--o{ LOGS           : "produce"
+        </div>
+    </div>
+    <div class="chips">
+        <span class="chip"><span class="dot" style="background:#06b6d4"></span>11 Tablas</span>
+        <span class="chip"><span class="dot" style="background:#a78bfa"></span>14 Relaciones FK</span>
+        <span class="chip"><span class="dot" style="background:#34d399"></span>SoftDeletes: 3 tablas</span>
+        <span class="chip"><span class="dot" style="background:#f59e0b"></span>Roles: Admin · Almacenero · Supervisor</span>
+    </div>
+</section>
+
+<!-- ═══════════ UML CLASES ═══════════ -->
+<section class="panel" id="panel-uml">
+    <div class="ph">
+        <div class="pt">
+            <div class="ptico ico-uml">🧩</div>
+            <div>
+                <h3>Diagrama de Clases UML</h3>
+                <p>10 clases · Modelado del Sistema de Almacén · Relaciones</p>
+            </div>
+        </div>
+        <div class="xbtns">
+            <button class="xbtn" onclick="dlSVG('card-uml','UML_SistemaAlmacen')">⬇ SVG</button>
+            <button class="xbtn" onclick="dlPNG('card-uml','UML_SistemaAlmacen')">🖼️ PNG</button>
+            <button class="xbtn" onclick="dlPDF('card-uml','UML_SistemaAlmacen')">📄 PDF</button>
+        </div>
+    </div>
+    
+    <!-- Resumen de Clases UML (Almacén) -->
+    <div style="background:var(--glass); border:1px solid var(--border); padding:16px; border-radius:12px; margin-bottom:18px; font-size:12px; line-height:1.6; color:var(--txt2);">
+        <strong style="color:var(--txt); display:block; margin-bottom:6px; font-size:13px;">📝 Resumen del Diagrama de Clases UML (Sistema de Almacén):</strong>
+        Este diagrama representa la estructura de clases del <strong>Sistema de Almacén</strong>, adaptando el modelado solicitado al contexto real del sistema:
+        <br>• <strong style="color:var(--uml);">Herencia (Generalización):</strong> Las clases <span style="color:var(--uml);">Trabajador</span> (personal operario con DNI) y <span style="color:var(--uml);">Usuario</span> (usuario del sistema con rol) heredan de la clase abstracta conceptual <span style="color:var(--uml);">Persona</span> (idPersona, nombre, creado_en), compartiendo atributos y comportamiento base.
+        <br>• <strong style="color:var(--uml);">Asociación (1 a Muchos):</strong> Un <span style="color:var(--uml);">Trabajador</span> (1) y un <span style="color:var(--uml);">Usuario</span> (1) pueden registrar y estar vinculados a múltiples <span style="color:var(--uml);">Vale</span> de préstamos (0..*). Asimismo, <span style="color:var(--uml);">Incidencia</span> se asocia a <span style="color:var(--uml);">Trabajador</span> (1 a 0..*) y <span style="color:var(--uml);">Herramienta</span> (1 a 0..*), y <span style="color:var(--uml);">Mantenimiento</span> a <span style="color:var(--uml);">Herramienta</span> (1 a 0..*).
+        <br>• <strong style="color:var(--uml);">Composición (Relación Fuerte):</strong> Un <span style="color:var(--uml);">Vale</span> (1) se compone de múltiples <span style="color:var(--uml);">ValeDetalle</span> (1..*). A su vez, cada línea de <span style="color:var(--uml);">ValeDetalle</span> (*) contiene una <span style="color:var(--uml);">Herramienta</span> (1).
+        <br>• <strong style="color:var(--uml);">Agregación (Relación Débil):</strong> <span style="color:var(--uml);">Categoria</span> (1) y <span style="color:var(--uml);">Almacen</span> (1) contienen relaciones de agregación con <span style="color:var(--uml);">ValeDetalle</span>. Esto indica que el detalle de préstamo puede existir de forma independiente sin depender del ciclo de vida físico del almacén o la categoría.
+    </div>
+    <div class="dcard" id="card-uml">
+        <div class="lov" id="lov-uml"><div class="spin"></div><span>Renderizando UML…</span></div>
+        <div class="mermaid" id="m-uml">
+classDiagram
+    direction TB
+
+    class Persona {
+        <<abstract>>
+        -idPersona: int
+        -nombre: String
+        -creado_en: Timestamp
+    }
+
+    class Trabajador {
+        -dni: String
+        -apellidos: String
+        -telefono: String
+        -cargo: String
+        -estado: Enum
+        +solicitarPrestamo() void
+    }
+
+    class Usuario {
+        -usuario: String
+        -password: String
+        -rol: Enum
+        +registrarVale() void
+    }
+
+    class Vale {
+        -idVale: int
+        -codigo_vale: String
+        -fecha_creacion: Timestamp
+        -fecha_limite: Timestamp
+        -estado: Enum
+    }
+
+    class ValeDetalle {
+        -cantidad_prestada: int
+        -cantidad_devuelta: int
+    }
+
+    class Categoria {
+        -idCategoria: int
+        -nombre: String
+    }
+
+    class Almacen {
+        -idAlmacen: int
+        -nombre: String
+        -ubicacion_general: String
+        +controlarStock() void
+    }
+
+    class Herramienta {
+        -idHerramienta: int
+        -codigo: String
+        -nombre: String
+        -estado: Enum
+        -stock_total: int
+        -stock_disponible: int
+        +actualizarStock() void
+    }
+
+    class Incidencia {
+        -idIncidencia: int
+        -fecha: Timestamp
+        -cantidad_afectada: int
+        -tipo: String
+        -descripcion: String
+        -monto_sancion: Decimal
+        -gravedad: String
+        -estado_disciplinario: String
+    }
+
+    class Mantenimiento {
+        -idMantenimiento: int
+        -fecha_inicio: Timestamp
+        -fecha_fin: Timestamp
+        -descripcion: String
+        -costo: Decimal
+        -estado: Enum
+    }
+
+    Persona <|-- Trabajador : Herencia (Generalizacion)
+    Persona <|-- Usuario : Herencia (Generalizacion)
+    Trabajador "1" --> "0..*" Vale : Asociacion
+    Usuario "1" --> "0..*" Vale : Asociacion
+    Vale "1" *-- "1..*" ValeDetalle : Composicion
+    ValeDetalle "*" *-- "1" Herramienta : Composicion
+    Categoria "1" o-- ValeDetalle : Agregacion
+    Almacen "1" o-- "0..*" ValeDetalle : Agregacion
+    Herramienta "1" --> "0..*" Incidencia : Asociacion
+    Trabajador "1" --> "0..*" Incidencia : Asociacion
+    Herramienta "1" --> "0..*" Mantenimiento : Asociacion
+        </div>
+    </div>
+    <div class="chips">
+        <span class="chip"><span class="dot" style="background:#a78bfa"></span>10 Clases del Sistema</span>
+        <span class="chip"><span class="dot" style="background:#06b6d4"></span>Herencia · Asociación</span>
+        <span class="chip"><span class="dot" style="background:#34d399"></span>Agregación · Composición</span>
+        <span class="chip"><span class="dot" style="background:#f59e0b"></span>Multiplicidades adaptadas</span>
+    </div>
+</section>
+
+<!-- ═══════════ CASOS DE USO ═══════════ -->
+<section class="panel" id="panel-uc">
+    <div class="ph">
+        <div class="pt">
+            <div class="ptico ico-uc">👥</div>
+            <div>
+                <h3>Diagrama de Casos de Uso</h3>
+                <p>3 actores · 9 módulos · Control de acceso por rol (RBAC)</p>
+            </div>
+        </div>
+        <div class="xbtns">
+            <button class="xbtn" onclick="dlSVG('card-uc','CasosDeUso_SistemaAlmacen')">⬇ SVG</button>
+            <button class="xbtn" onclick="dlPNG('card-uc','CasosDeUso_SistemaAlmacen')">🖼️ PNG</button>
+            <button class="xbtn" onclick="dlPDF('card-uc','CasosDeUso_SistemaAlmacen')">📄 PDF</button>
+        </div>
+    </div>
+    
+    <!-- Resumen de Casos de Uso -->
+    <div style="background:var(--glass); border:1px solid var(--border); padding:16px; border-radius:12px; margin-bottom:18px; font-size:12px; line-height:1.6; color:var(--txt2);">
+        <strong style="color:var(--txt); display:block; margin-bottom:6px; font-size:13px;">📝 Resumen del Diagrama de Casos de Uso:</strong>
+        Este diagrama representa las interacciones de los diferentes roles de usuario con las funcionalidades del sistema (RBAC).
+        Se compone de <strong>3 actores activos</strong>:
+        <span style="color:var(--g);">Administrador</span> (superusuario con acceso a gestión de usuarios, auditoría de logs e inactivación/reactivación física de recursos),
+        <span style="color:var(--g);">Almacenero</span> (rol operativo para el flujo diario de almacenes: préstamos, devoluciones, incidencias, mantenimiento y herramientas), y
+        <span style="color:var(--g);">Supervisor</span> (rol de control con acceso a reportes, exportaciones y monitoreo Cortex).
+        El <span style="color:var(--g);">Trabajador</span> actúa como una <strong>entidad pasiva</strong> (no inicia sesión, pero las incidencias y vales de préstamo se crean en torno a él).
+        Las funcionalidades están agrupadas en <strong>9 módulos funcionales</strong>, mapeando de forma directa las rutas del archivo <span style="color:var(--g);">routes/web.php</span>.
+    </div>
+    <div class="dcard" id="card-uc">
+        <div class="lov" id="lov-uc"><div class="spin"></div><span>Renderizando Casos de Uso…</span></div>
+        <div class="mermaid" id="m-uc">
+flowchart TD
+    ADM(["👤 Administrador"])
+    ALM(["👤 Almacenero"])
+    SUP(["👤 Supervisor"])
+    TRA(["👤 Trabajador\nEntidad pasiva"])
+
+    subgraph AUTH["🔐 Autenticación"]
+        L1["Iniciar sesión"]
+        L2["Cerrar sesión"]
+    end
+
+    subgraph HERR["🔧 Herramientas"]
+        H1["Ver inventario"]
+        H2["Registrar herramienta"]
+        H3["Editar herramienta"]
+        H4["Dar de baja"]
+        H5["Reponer stock"]
+        H6["Ver ubicaciones"]
+    end
+
+    subgraph ALM_MOD["🏭 Almacenes"]
+        A1["Ver almacenes"]
+        A2["Crear almacén"]
+        A3["Editar almacén"]
+        A4["Eliminar almacén"]
+        A5["Gestionar categorías"]
+    end
+
+    subgraph VALES_MOD["📋 Vales / Préstamos"]
+        V1["Ver vales activos"]
+        V2["Crear vale"]
+        V3["Devolución total"]
+        V4["Devolución parcial"]
+        V5["Ver historial"]
+    end
+
+    subgraph TRAB["👷 Trabajadores"]
+        T1["Ver trabajadores"]
+        T2["Registrar trabajador"]
+        T3["Editar trabajador"]
+        T4["Dar de baja"]
+        T5["Reactivar trabajador"]
+    end
+
+    subgraph INC["⚠️ Incidencias"]
+        I1["Ver incidencias"]
+        I2["Registrar incidencia"]
+        I3["Resolver incidencia"]
+        I4["Aplicar sanción"]
+    end
+
+    subgraph MANT["🛠️ Mantenimiento"]
+        M1["Ver mantenimientos"]
+        M2["Registrar mantenimiento"]
+        M3["Marcar reparado"]
+    end
+
+    subgraph REP["📊 Reportes"]
+        R1["Reporte herramientas"]
+        R2["Reporte usuarios"]
+        R3["Reporte personal"]
+        R4["Exportar Word"]
+    end
+
+    subgraph CORTEX["🤖 Cortex IA"]
+        C1["Ver panel monitor"]
+        C2["Escaneo de salud"]
+        C3["Reparar componente"]
+        C4["Asistente IA"]
+    end
+
+    subgraph USR["⚙️ Usuarios Sistema"]
+        U1["Crear usuario"]
+        U2["Editar usuario"]
+        U3["Eliminar usuario"]
+    end
+
+    ADM --> L1 & L2
+    ADM --> H1 & H2 & H3 & H4 & H5 & H6
+    ADM --> A1 & A2 & A3 & A4 & A5
+    ADM --> V1 & V2 & V3 & V4 & V5
+    ADM --> T1 & T2 & T3 & T4 & T5
+    ADM --> I1 & I2 & I3 & I4
+    ADM --> M1 & M2 & M3
+    ADM --> R1 & R2 & R3 & R4
+    ADM --> C1 & C2 & C3 & C4
+    ADM --> U1 & U2 & U3
+
+    ALM --> L1 & L2
+    ALM --> H1 & H2 & H3 & H5 & H6
+    ALM --> A1 & A5
+    ALM --> V1 & V2 & V3 & V4 & V5
+    ALM --> T1 & T2 & T3 & T4
+    ALM --> I1 & I2 & I3
+    ALM --> M1 & M2 & M3
+
+    SUP --> L1 & L2
+    SUP --> H1 & H6 & A1 & V1 & V5 & T1 & I1 & M1
+    SUP --> R1 & R2 & R3 & R4
+    SUP --> C1 & C2 & C4
+
+    TRA -. "solicita préstamo" .-> V2
+    TRA -. "involucrado en" .-> I2
+        </div>
+    </div>
+    <div class="chips">
+        <span class="chip"><span class="dot" style="background:#34d399"></span>3 Actores activos</span>
+        <span class="chip"><span class="dot" style="background:#06b6d4"></span>9 Módulos del sistema</span>
+        <span class="chip"><span class="dot" style="background:#a78bfa"></span>Control de acceso RBAC</span>
+        <span class="chip"><span class="dot" style="background:#f59e0b"></span>Trabajador: entidad pasiva</span>
+    </div>
+</section>
+
+<!-- ═══════════ ESTADOS ═══════════ -->
+<section class="panel" id="panel-st">
+    <div class="ph">
+        <div class="pt">
+            <div class="ptico ico-st">🔄</div>
+            <div>
+                <h3>Diagramas de Estado</h3>
+                <p>Ciclos de vida: Herramienta · Vale · Mantenimiento · Incidencia · Trabajador</p>
+            </div>
+        </div>
+        <div class="xbtns">
+            <button class="xbtn" onclick="dlSVG('card-st','Estados_SistemaAlmacen')">⬇ SVG</button>
+            <button class="xbtn" onclick="dlPNG('card-st','Estados_SistemaAlmacen')">🖼️ PNG</button>
+            <button class="xbtn" onclick="dlPDF('card-st','Estados_SistemaAlmacen')">📄 PDF</button>
+        </div>
+    </div>
+    
+    <!-- Resumen de Diagramas de Estado -->
+    <div style="background:var(--glass); border:1px solid var(--border); padding:16px; border-radius:12px; margin-bottom:18px; font-size:12px; line-height:1.6; color:var(--txt2);">
+        <strong style="color:var(--txt); display:block; margin-bottom:6px; font-size:13px;">📝 Resumen de los Diagramas de Estado (Ciclos de Vida):</strong>
+        Este panel modela los ciclos de vida de <strong>5 elementos clave</strong> del sistema, reflejando cómo cambian sus estados ante eventos del negocio:
+        <br>1. <strong style="color:var(--o);">Herramientas:</strong> Transiciona de <em>Disponible</em> a <em>Prestada</em>, a <em>En Reparación</em> (por mantenimiento preventivo o incidencias de daño) o es dada de <em>Baja</em> de forma definitiva.
+        <br>2. <strong style="color:var(--o);">Vales de Préstamo:</strong> Inicia como <em>Activo</em>, pudiendo pasar a <em>Vencido</em> (si supera la fecha límite), <em>Parcial</em> (cuando se devuelven algunas herramientas) y finalmente a <em>Devuelto</em>.
+        <br>3. <strong style="color:var(--o);">Mantenimientos:</strong> Ciclo secuencial de <em>Pendiente</em> → <em>En Proceso</em> → <em>Completado</em>.
+        <br>4. <strong style="color:var(--o);">Incidencias:</strong> De <em>Activa</em> a <em>Resuelta</em> (al aplicarse una acción correctiva) o <em>Archivada</em>.
+        <br>5. <strong style="color:var(--o);">Trabajadores:</strong> Activo o Inactivo (soft deletes).
+    </div>
+    <div class="dcard" id="card-st">
+        <div class="lov" id="lov-st"><div class="spin"></div><span>Renderizando Estados…</span></div>
+        <div class="mermaid" id="m-st">
+stateDiagram-v2
+    [*] --> Disponible : Herramienta registrada
+
+    state "HERRAMIENTA" as HG {
+        Disponible : Disponible
+        Prestada : Prestada
+        EnReparacion : En Reparacion
+        Baja : Baja
+
+        Disponible --> Prestada     : Crear vale o prestamo directo
+        Prestada --> Disponible     : Devolucion total confirmada
+        Prestada --> EnReparacion   : Incidencia de dano reportada
+        EnReparacion --> Disponible : Mantenimiento completado
+        Disponible --> EnReparacion : Mantenimiento preventivo
+        Disponible --> Baja         : Admin da de baja
+        Prestada --> Baja           : Perdida permanente
+        EnReparacion --> Baja       : Irreparable
+    }
+
+    [*] --> VActivo : Vale emitido
+
+    state "VALE DE PRESTAMO" as VG {
+        VActivo : Activo
+        VVencido : Vencido
+        VParcial : Parcial
+        VDevuelto : Devuelto
+
+        VActivo --> VVencido  : Fecha limite superada
+        VActivo --> VParcial  : Devolucion parcial registrada
+        VActivo --> VDevuelto : Devolucion total
+        VVencido --> VParcial  : Devolucion parcial tardia
+        VVencido --> VDevuelto : Devolucion total tardia
+        VParcial --> VDevuelto : Resto devuelto
+    }
+
+    [*] --> MPendiente : Mantenimiento registrado
+
+    state "MANTENIMIENTO" as MG {
+        MPendiente : Pendiente
+        MEnProceso : En Proceso
+        MCompletado : Completado
+
+        MPendiente --> MEnProceso  : Tecnico inicia trabajo
+        MEnProceso --> MCompletado : Reparacion finalizada
+        MEnProceso --> MPendiente  : Pausa por falta de repuestos
+    }
+
+    [*] --> IActiva : Incidencia registrada
+
+    state "INCIDENCIA" as IG {
+        IActiva : Activa
+        IResuelta : Resuelta
+        IArchivada : Archivada
+
+        IActiva --> IResuelta  : Accion correctiva aplicada
+        IActiva --> IArchivada : Sin accion requerida
+        IResuelta --> IArchivada : Confirmacion del supervisor
+    }
+
+    [*] --> TActivo : Trabajador dado de alta
+
+    state "TRABAJADOR" as TG {
+        TActivo : Activo
+        TInactivo : Inactivo
+
+        TActivo --> TInactivo : Dar de baja
+        TInactivo --> TActivo : Reactivar solo Admin
+    }
+        </div>
+    </div>
+    <div class="chips">
+        <span class="chip"><span class="dot" style="background:#f97316"></span>5 Ciclos de vida</span>
+        <span class="chip"><span class="dot" style="background:#ef4444"></span>Herramienta: 4 estados</span>
+        <span class="chip"><span class="dot" style="background:#f59e0b"></span>Vale: 4 estados</span>
+        <span class="chip"><span class="dot" style="background:#34d399"></span>Mantenimiento: 3 estados</span>
+        <span class="chip"><span class="dot" style="background:#a78bfa"></span>Incidencia + Trabajador</span>
+    </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <p>Sistema de Almacén · <strong>Laravel 11 + MySQL</strong> · Renderizado con <strong>Mermaid.js v10</strong></p>
+    <p style="margin-top:5px">Botones <em>SVG</em> (vectorial) y <em>PNG</em> (alta resolución) disponibles en cada diagrama</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   MERMAID CONFIG
+═══════════════════════════════════════════ */
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'neutral',
+    themeVariables: {
+        darkMode: false,
+        background: '#ffffff',
+        primaryColor: '#ffffff',
+        primaryTextColor: '#000000',
+        primaryBorderColor: '#000000',
+        lineColor: '#000000',
+        secondaryColor: '#ffffff',
+        tertiaryColor: '#ffffff',
+        fontSize: '13px',
+        edgeLabelBackground: '#ffffff',
+        titleColor: '#000000',
+        nodeTextColor: '#000000',
+    },
+    er: { useMaxWidth: false, layoutDirection: 'TB' },
+    classDiagram: { useMaxWidth: false },
+    flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'basis',
+        rankSpacing: 60,
+        nodeSpacing: 30,
+    },
+    stateDiagram: { useMaxWidth: false },
+    securityLevel: 'loose',
+});
+
+/* ═══════════════════════════════════════════
+   RENDER ALL DIAGRAMS
+═══════════════════════════════════════════ */
+const DIAGRAMS = [
+    { id: 'm-erd', lov: 'lov-erd' },
+    { id: 'm-uml', lov: 'lov-uml' },
+    { id: 'm-uc',  lov: 'lov-uc'  },
+    { id: 'm-st',  lov: 'lov-st'  },
+];
+
+async function renderAll() {
+    // Show loaders again when re-rendering
+    DIAGRAMS.forEach(d => {
+        const lov = document.getElementById(d.lov);
+        if (lov) lov.classList.remove('gone');
+    });
+
+    for (const d of DIAGRAMS) {
+        const el = document.getElementById(d.id);
+        if (!el) continue;
+        const src = el.textContent.trim();
+        try {
+            const uid = d.id + '_svg_' + Date.now();
+            const { svg } = await mermaid.render(uid, src);
+            el.innerHTML = svg;
+        } catch(e) {
+            console.error(d.id, e);
+            el.innerHTML = `<div class="merr">⚠️ Error al renderizar.<br><small>${e.message}</small></div>`;
+        }
+        const lov = document.getElementById(d.lov);
+        if (lov) lov.classList.add('gone');
+    }
+}
+
+/* ═══════════════════════════════════════════
+   THEME TOGGLE (B/N PRINT & DARK MODE)
+═══════════════════════════════════════════ */
+let isPrintMode = true;
+const bnToggleBtn = document.getElementById('bn-toggle');
+if (bnToggleBtn) {
+    bnToggleBtn.addEventListener('click', () => {
+        isPrintMode = !isPrintMode;
+        document.body.classList.toggle('print-mode', isPrintMode);
+        bnToggleBtn.textContent = isPrintMode ? '🌓 Modo Oscuro' : '🌓 Modo Impresión B/N';
+        
+        // Re-initialize Mermaid
+        if (isPrintMode) {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'neutral',
+                themeVariables: {
+                    darkMode: false,
+                    background: '#ffffff',
+                    primaryColor: '#ffffff',
+                    primaryTextColor: '#000000',
+                    primaryBorderColor: '#000000',
+                    lineColor: '#000000',
+                    secondaryColor: '#ffffff',
+                    tertiaryColor: '#ffffff',
+                    fontSize: '13px',
+                    edgeLabelBackground: '#ffffff',
+                    titleColor: '#000000',
+                    nodeTextColor: '#000000',
+                },
+                er: { useMaxWidth: false, layoutDirection: 'TB' },
+                classDiagram: { useMaxWidth: false },
+                flowchart: {
+                    useMaxWidth: false,
+                    htmlLabels: true,
+                    curve: 'basis',
+                    rankSpacing: 60,
+                    nodeSpacing: 30,
+                },
+                stateDiagram: { useMaxWidth: false },
+                securityLevel: 'loose',
+            });
+        } else {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                themeVariables: {
+                    darkMode: true,
+                    background: '#0d1530',
+                    primaryColor: '#1a2540',
+                    primaryTextColor: '#e2e8f0',
+                    primaryBorderColor: '#2d3f6e',
+                    lineColor: '#6366f1',
+                    secondaryColor: '#141e38',
+                    tertiaryColor: '#0f172a',
+                    fontSize: '13px',
+                    edgeLabelBackground: '#1a2540',
+                    clusterBkg: '#111827',
+                    clusterBorder: '#2d3f6e',
+                    titleColor: '#f1f5f9',
+                    nodeTextColor: '#e2e8f0',
+                    attributeBackgroundColorEven: '#16233b',
+                    attributeBackgroundColorOdd: '#111d35',
+                },
+                er: { useMaxWidth: false, layoutDirection: 'TB' },
+                classDiagram: { useMaxWidth: false },
+                flowchart: {
+                    useMaxWidth: false,
+                    htmlLabels: true,
+                    curve: 'basis',
+                    rankSpacing: 60,
+                    nodeSpacing: 30,
+                },
+                stateDiagram: { useMaxWidth: false },
+                securityLevel: 'loose',
+            });
+        }
+        
+        // Re-render
+        renderAll();
+    });
+}
+
+/* ═══════════════════════════════════════════
+   TAB NAVIGATION
+═══════════════════════════════════════════ */
+document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const t = btn.dataset.tab;
+        document.querySelectorAll('.tab').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected','false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected','true');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        const panel = document.getElementById('panel-' + t);
+        if (panel) panel.classList.add('active');
+    });
+});
+
+/* ═══════════════════════════════════════════
+   EXPORT SVG
+═══════════════════════════════════════════ */
+function dlSVG(cardId, filename) {
+    const card = document.getElementById(cardId);
+    const svg  = card.querySelector('svg');
+    if (!svg) { alert('Espera a que el diagrama termine de cargar.'); return; }
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('width','100%'); bg.setAttribute('height','100%');
+    bg.setAttribute('fill', document.body.classList.contains('print-mode') ? '#ffffff' : '#0d1530');
+    clone.insertBefore(bg, clone.firstChild);
+    const blob = new Blob([clone.outerHTML], {type:'image/svg+xml;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    doDownload(url, filename + '.svg');
+    URL.revokeObjectURL(url);
+}
+
+/* ═══════════════════════════════════════════
+   EXPORT PNG
+═══════════════════════════════════════════ */
+function dlPNG(cardId, filename) {
+    const card = document.getElementById(cardId);
+    const svg  = card.querySelector('svg');
+    if (!svg) { alert('Espera a que el diagrama termine de cargar.'); return; }
+
+    const SCALE  = 2.5;
+    const bbox   = svg.getBoundingClientRect();
+    const w      = Math.round(bbox.width  * SCALE) || 1400;
+    const h      = Math.round(bbox.height * SCALE) || 900;
+
+    const clone  = svg.cloneNode(true);
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    clone.setAttribute('width',  w);
+    clone.setAttribute('height', h);
+    
+    const bgColor = document.body.classList.contains('print-mode') ? '#ffffff' : '#0d1530';
+    clone.style.background = bgColor;
+
+    const svgBlob = new Blob([new XMLSerializer().serializeToString(clone)],
+                             {type:'image/svg+xml;charset=utf-8'});
+    const svgURL  = URL.createObjectURL(svgBlob);
+    const img     = new Image();
+
+    img.onload = () => {
+        const canvas  = document.createElement('canvas');
+        canvas.width  = w; canvas.height = h;
+        const ctx     = canvas.getContext('2d');
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        doDownload(canvas.toDataURL('image/png', 1.0), filename + '.png');
+        URL.revokeObjectURL(svgURL);
+    };
+    img.onerror = () => {
+        alert('No se pudo exportar PNG. Intenta con SVG.');
+        URL.revokeObjectURL(svgURL);
+    };
+    img.src = svgURL;
+}
+
+/* ═══════════════════════════════════════════
+   EXPORT PDF (uses jsPDF and canvas)
+═══════════════════════════════════════════ */
+function dlPDF(cardId, filename) {
+    const card = document.getElementById(cardId);
+    const svg  = card.querySelector('svg');
+    if (!svg) { alert('Espera a que el diagrama termine de cargar.'); return; }
+
+    const SCALE  = 2.0;
+    const bbox   = svg.getBoundingClientRect();
+    const w      = Math.round(bbox.width  * SCALE) || 1200;
+    const h      = Math.round(bbox.height * SCALE) || 800;
+
+    const clone  = svg.cloneNode(true);
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    clone.setAttribute('width',  w);
+    clone.setAttribute('height', h);
+    
+    const bgColor = document.body.classList.contains('print-mode') ? '#ffffff' : '#0d1530';
+    clone.style.background = bgColor;
+
+    const svgBlob = new Blob([new XMLSerializer().serializeToString(clone)],
+                             {type:'image/svg+xml;charset=utf-8'});
+    const svgURL  = URL.createObjectURL(svgBlob);
+    const img     = new Image();
+
+    img.onload = () => {
+        try {
+            const canvas  = document.createElement('canvas');
+            canvas.width  = w; canvas.height = h;
+            const ctx     = canvas.getContext('2d');
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+            if (!jsPDFClass) {
+                throw new Error('jsPDF no está definido en el objeto global');
+            }
+            const orientation = w > h ? 'l' : 'p';
+            
+            const pdf = new jsPDFClass({
+                orientation: orientation,
+                unit: 'px',
+                format: [w + 40, h + 40]
+            });
+            
+            if (document.body.classList.contains('print-mode')) {
+                pdf.setFillColor(255, 255, 255);
+            } else {
+                pdf.setFillColor(13, 21, 48);
+            }
+            pdf.rect(0, 0, w + 40, h + 40, 'F');
+            
+            pdf.addImage(imgData, 'PNG', 20, 20, w, h);
+            pdf.save(filename + '.pdf');
+        } catch (e) {
+            console.error('El renderizado a PDF local falló. Abriendo diálogo de impresión nativo para guardar como PDF.', e);
+            window.print();
+        } finally {
+            URL.revokeObjectURL(svgURL);
+        }
+    };
+    img.onerror = () => {
+        console.warn('La carga de la imagen SVG falló. Abriendo diálogo de impresión nativo.');
+        window.print();
+        URL.revokeObjectURL(svgURL);
+    };
+    img.src = svgURL;
+}
+
+function doDownload(url, name) {
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.addEventListener('load', renderAll);
+</script>
+</body>
+</html>

@@ -522,8 +522,43 @@
         </li>
     </ul>
 
+    <!-- 3.8.6 Prevención de Vulnerabilidades -->
+    <h2>3.8.6 Prevención de Vulnerabilidades Básicas (XSS, SQLi, Sesiones, CSRF)</h2>
+    <p>
+        El sistema implementa mecanismos activos y configuraciones robustas para mitigar los principales riesgos de seguridad web:
+    </p>
+
+    <h3>1. Inyección SQL (SQLi) y Consultas Preparadas</h3>
+    <p>
+        El motor del catálogo utiliza enlaces de parámetros a nivel de controlador mediante Eloquent ORM y PDO. Al realizar búsquedas parametrizadas, las instrucciones SQL y los datos de entrada se envían por canales independientes. Las comillas simples (') y dobles (") se interpretan de forma segura como texto literal e inofensivo.
+    </p>
+    <div class="code-block"><span class="code-comment">// Consulta Segura Parametrizada (Eloquent)</span>
+$herramientas = Herramienta::where('nombre', 'like', "%{$busqueda}%")
+    ->orWhere('codigo', 'like', "%{$busqueda}%")
+    ->get();</div>
+
+    <h3>2. Cross-Site Scripting (XSS) mediante Middleware</h3>
+    <p>
+        Se ha desarrollado un middleware global de sanitización recursiva de inputs registrado en el pipeline de la aplicación (<span class="inline-code">XssSanitization.php</span>). Este intercepta el payload de todas las solicitudes HTTP entrantes (formularios, JSON, queries) y elimina cualquier etiqueta script o código ejecutable mediante la función <span class="inline-code">strip_tags()</span> antes de ser procesado por los controladores.
+    </p>
+    <div class="code-block"><span class="code-comment">// Middleware XssSanitization.php</span>
+$input = $request->all();
+array_walk_recursive($input, function (&$val) {
+    if (is_string($val)) {
+        $val = strip_tags($val);
+    }
+});
+$request->merge($input);</div>
+
+    <h3>3. Seguridad de Sesión y Cookies</h3>
+    <p>
+        La configuración en <span class="inline-code">config/session.php</span> establece medidas estrictas de mitigación:
+        <br>· <strong>HttpOnly (http_only => true)</strong>: Impide el acceso a la cookie de sesión a través de scripts de cliente (JavaScript), previniendo el robo de sesión ante ataques XSS.
+        <br>· <strong>SameSite (same_site => 'lax')</strong>: Mitiga ataques de CSRF (Cross-Site Request Forgery) restringiendo el envío de cookies en peticiones originadas en dominios externos.
+    </p>
+
     <!-- 3.8.5 Requisitos -->
-    <h2>3.8.5 Requisitos del Sistema</h2>
+    <h2>3.8.7 Requisitos del Sistema</h2>
     <table>
         <thead><tr><th style="width:25%;">Componente</th><th style="width:35%;">Requerimiento Mínimo</th><th>Versión Probada</th></tr></thead>
         <tbody>

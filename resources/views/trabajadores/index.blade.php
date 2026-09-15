@@ -44,9 +44,23 @@
             <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay trabajadores activos registrados.</td></tr>
             @else
                 @foreach($trabajadores as $t)
-                <tr class="trabajador-row">
+                @php
+                    $tieneRetraso = $t->vales()->where('estado', 'Activo')->where('fecha_limite', '<', \Carbon\Carbon::now())->exists();
+                @endphp
+                <tr class="trabajador-row" style="{{ $tieneRetraso ? 'background: linear-gradient(90deg, rgba(244, 63, 94, 0.08), transparent); border-left: 4px solid #F43F5E;' : '' }}">
                     <td class="col-dni" style="font-weight: 500;">{{ $t->dni }}</td>
-                    <td class="col-nombre">{{ $t->nombre }} {{ $t->apellidos }}</td>
+                    <td class="col-nombre">
+                        @if(session()->get('cortex_xss_protection', true))
+                            {{ $t->nombre }} {{ $t->apellidos }}
+                        @else
+                            {!! $t->nombre !!} {!! $t->apellidos !!}
+                        @endif
+                        @if($tieneRetraso)
+                            <span class="badge" style="background: rgba(244, 63, 94, 0.1); color: #F43F5E; border: 1px solid #F43F5E; font-size: 0.75rem; margin-left: 0.5rem; font-weight: bold; padding: 2px 6px;">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Retraso
+                            </span>
+                        @endif
+                    </td>
                     <td>{{ $t->cargo }}</td>
                     <td>{{ $t->telefono }}</td>
                     <td>
@@ -63,12 +77,13 @@
                         </a>
                         @endif
                         
-                        @if(Auth::user()->rol === 'Administrador')
-                        <form action="{{ route('trabajadores.destroy', $t->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('¿Confirma mover a este trabajador a Inactivos?');">
+                        @if(in_array(Auth::user()->rol, ['Administrador', 'Almacenero']))
+                        <form action="{{ route('trabajadores.destroy', $t->id) }}" method="POST" style="display:inline-block;"
+                              onsubmit="return confirm('Dar de baja a: {{ addslashes($t->nombre) }} {{ addslashes($t->apellidos) }} (DNI: {{ $t->dni }}). Esta accion quedara registrada en el log de auditoria.');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="action-btn delete" title="Desactivar / Eliminar" style="border:none; cursor:pointer;">
-                                <i class="fa-solid fa-trash"></i>
+                            <button type="submit" class="action-btn delete" title="Dar de baja al trabajador" style="border:none; cursor:pointer;">
+                                <i class="fa-solid fa-user-minus"></i>
                             </button>
                         </form>
                         @endif

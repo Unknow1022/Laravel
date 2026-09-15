@@ -1,0 +1,20 @@
+{
+    "name": "Almacen Inteligente",
+    "env": {
+        "APP_NAME": "Almacen-Inteligente",
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
+        "SESSION_DRIVER": "database",
+        "CACHE_STORE": "database",
+        "QUEUE_CONNECTION": "sync",
+        "LOG_LEVEL": "error"
+    },
+    "buildpacks": [
+        {
+            "url": "heroku/php"
+        }
+    ],
+    "scripts": {
+        "postdeploy": "php artisan migrate --force && php artisan storage:link && php artisan config:cache && php artisan view:cache"
+    }
+}

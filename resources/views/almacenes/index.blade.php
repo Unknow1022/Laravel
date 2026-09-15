@@ -17,14 +17,32 @@
 
 <div class="nodes-grid">
     @foreach($almacenes as $almacen)
-    <div class="node-card">
+    @php
+        $totalTools = \App\Models\Herramienta::sum('stock_total') ?: 1;
+        $pctLoad = ($almacen->herramientas_count / $totalTools) * 100;
+        $esSobrecargado = $pctLoad > 80;
+        $tieneAgotadas = $almacen->herramientas()->where('stock_disponible', '<=', 0)->exists();
+        $tieneAlerta = $esSobrecargado || $tieneAgotadas;
+    @endphp
+    <div class="node-card" style="{{ $tieneAlerta ? 'border-color: #F43F5E; box-shadow: 0 10px 30px rgba(244, 63, 94, 0.15); background: linear-gradient(135deg, rgba(244, 63, 94, 0.05) 0%, rgba(10, 25, 47, 0.4) 100%);' : '' }}">
         <div class="node-status">
-            <span class="status-indicator active"></span>
-            <span class="active-count">{{ $almacen->herramientas_count }} Activos</span>
+            <span class="status-indicator" style="{{ $tieneAlerta ? 'background: #F43F5E; box-shadow: 0 0 10px #F43F5E;' : 'background: var(--primary-color); box-shadow: 0 0 10px var(--primary-color);' }}"></span>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="active-count">{{ $almacen->herramientas_count }} Activos</span>
+                @if($esSobrecargado)
+                    <span class="badge" style="background: rgba(244, 63, 94, 0.1); color: #F43F5E; border: 1px solid #F43F5E; font-size: 0.7rem; font-weight: bold; padding: 2px 6px;">
+                        SOBRECARGADO
+                    </span>
+                @elseif($tieneAgotadas)
+                    <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid #F59E0B; font-size: 0.7rem; font-weight: bold; padding: 2px 6px;">
+                        STOCK EN CERO
+                    </span>
+                @endif
+            </div>
         </div>
         
         <div class="node-body">
-            <div class="node-icon">
+            <div class="node-icon" style="{{ $tieneAlerta ? 'color: #F43F5E; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.05);' : '' }}">
                 <i class="fa-solid fa-warehouse"></i>
             </div>
             <div class="node-info">
@@ -37,7 +55,7 @@
         </div>
 
         <div class="node-actions">
-            <a href="{{ route('almacenes.categorias.index', $almacen->id) }}" class="action-link">
+            <a href="{{ route('almacenes.categorias.index', $almacen->id) }}" class="action-link" style="{{ $tieneAlerta ? 'color: #F43F5E;' : '' }}">
                 <i class="fa-solid fa-tags"></i> Gestionar Categorías
             </a>
             <div class="action-btns">

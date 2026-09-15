@@ -30,11 +30,13 @@ class TrabajadoresController extends Controller
         $busqueda = substr(strip_tags($request->query('search', '')), 0, 100);
         $busqueda_segura = str_replace(['%', '_'], ['\%', '\_'], $busqueda);
 
-        $trabajadores = Trabajador::where('estado', '!=', 'Activo')
+        $trabajadores = Trabajador::onlyTrashed()
             ->when($busqueda_segura, function ($query, $busqueda_segura) {
-                return $query->where('nombre', 'like', "%{$busqueda_segura}%")
-                             ->orWhere('apellidos', 'like', "%{$busqueda_segura}%")
-                             ->orWhere('dni', 'like', "%{$busqueda_segura}%");
+                return $query->where(function($q) use ($busqueda_segura) {
+                    $q->where('nombre', 'like', "%{$busqueda_segura}%")
+                      ->orWhere('apellidos', 'like', "%{$busqueda_segura}%")
+                      ->orWhere('dni', 'like', "%{$busqueda_segura}%");
+                });
             })->paginate(10);
 
         return view('trabajadores.inactivos', compact('trabajadores', 'busqueda'));
@@ -56,11 +58,18 @@ class TrabajadoresController extends Controller
         }
 
         $request->validate([
-            'dni' => 'required|string|size:8|unique:trabajadores,dni',
+            'dni' => ['required', 'string', 'size:8', 'regex:/^[0-9]{8}$/', 'unique:trabajadores,dni'],
             'nombre' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
             'cargo' => 'nullable|string|max:100',
             'telefono' => 'nullable|string|max:20',
+        ], [
+            'dni.required' => 'El DNI es un campo obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 caracteres.',
+            'dni.regex' => 'El DNI debe contener únicamente números.',
+            'dni.unique' => 'Este DNI ya está registrado en el sistema.',
+            'nombre.required' => 'El nombre es obligatorio.',
+            'apellidos.required' => 'Los apellidos son obligatorios.',
         ]);
 
         $trabajador = Trabajador::create([
@@ -102,11 +111,18 @@ class TrabajadoresController extends Controller
         }
 
         $request->validate([
-            'dni' => 'required|string|size:8|unique:trabajadores,dni,' . $trabajador->id,
+            'dni' => ['required', 'string', 'size:8', 'regex:/^[0-9]{8}$/', 'unique:trabajadores,dni,' . $trabajador->id],
             'nombre' => 'required|string|max:100',
             'apellidos' => 'required|string|max:100',
             'cargo' => 'nullable|string|max:100',
             'telefono' => 'nullable|string|max:20',
+        ], [
+            'dni.required' => 'El DNI es un campo obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 caracteres.',
+            'dni.regex' => 'El DNI debe contener únicamente números.',
+            'dni.unique' => 'Este DNI ya está registrado en el sistema.',
+            'nombre.required' => 'El nombre es obligatorio.',
+            'apellidos.required' => 'Los apellidos son obligatorios.',
         ]);
 
         $trabajador->update([
@@ -133,27 +149,40 @@ class TrabajadoresController extends Controller
     {
         $trabajador = $trabajadore;
         $vales = Vale::where('trabajador_id', $trabajador->id)->orderBy('id', 'desc')->get();
+        $incidencias = \App\Models\Incidencia::with(['herramienta', 'vale'])->where('trabajador_id', $trabajador->id)->orderBy('fecha', 'desc')->get();
 
-        return view('trabajadores.show', compact('trabajador', 'vales'));
+        return view('trabajadores.show', compact('trabajador', 'vales', 'incidencias'));
     }
 
     public function destroy(Trabajador $trabajadore)
     {
         $trabajador = $trabajadore;
-        if (Auth::user()->rol !== 'Administrador') {
+
+        if (!in_array(Auth::user()->rol, ['Administrador', 'Almacenero'])) {
             abort(403);
         }
+
+        // Capturar datos del trabajador antes del soft delete
+        $tNombre    = $trabajador->nombre . ' ' . $trabajador->apellidos;
+        $tDni       = $trabajador->dni;
+        $tCargo     = $trabajador->cargo ?? 'Sin cargo';
+
+        // Capturar datos del ejecutor
+        $ejecutor       = Auth::user();
+        $ejecutorNombre  = $ejecutor->nombre;
+        $ejecutorUsuario = $ejecutor->usuario;
+        $ejecutorRol     = $ejecutor->rol;
 
         $trabajador->update(['estado' => 'Inactivo']);
         $trabajador->delete(); // Soft delete
 
         Log::create([
-            'usuario_id' => Auth::id(),
-            'accion' => 'ELIMINAR',
-            'tabla' => 'trabajadores',
-            'item_id' => $trabajador->id,
-            'descripcion' => "Dado de baja: {$trabajador->nombre} {$trabajador->apellidos}",
-            'fecha' => now()
+            'usuario_id'  => Auth::id(),
+            'accion'      => 'ELIMINAR',
+            'tabla'       => 'trabajadores',
+            'item_id'     => $trabajador->id,
+            'descripcion' => "{$ejecutorRol} '{$ejecutorUsuario}' ({$ejecutorNombre}) dio de baja al trabajador: {$tNombre} (DNI: {$tDni}, Cargo: {$tCargo}).",
+            'fecha'       => now()
         ]);
 
         return redirect()->route('trabajadores.index')->with('eliminado', '1');

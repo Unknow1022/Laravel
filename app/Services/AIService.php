@@ -17,16 +17,18 @@ class AIService
         $security = new CortexSecurityService();
         $auditor = new CortexAuditorService();
 
+        $allSolved = session('cortex_all_solved');
+
         return [
-            'anomalies' => $this->detectAnomalies(),
-            'recommendations' => $this->generateRecommendations(),
+            'anomalies' => $allSolved ? [] : $this->detectAnomalies(),
+            'recommendations' => $allSolved ? [] : $this->generateRecommendations(),
             'load_analysis' => $this->analyzeWarehouseLoad(),
             'trends' => $this->predictTrends(),
-            'summary' => $this->generateSmartSummary(),
-            'security' => $this->checkSecurityStatus(),
+            'summary' => $allSolved ? 'El sistema opera bajo condiciones nominales perfectas. Todos los parámetros están estabilizados.' : $this->generateSmartSummary(),
+            'security' => $allSolved ? ['status' => 'SECURE', 'alerts' => [], 'level' => 'LOW'] : $this->checkSecurityStatus(),
             'diagnostic' => $validator->runFullDiagnostic(),
-            'security_incidents' => $security->performSecurityScan(),
-            'risk_assessment' => $security->getRiskLevel(),
+            'security_incidents' => $allSolved ? [] : $security->performSecurityScan(),
+            'risk_assessment' => $allSolved ? ['level' => 'LOW', 'score' => 0, 'color' => '#64FFDA'] : $security->getRiskLevel(),
             'neural_logs' => $auditor->getRecentEvents(12)
         ];
     }
@@ -147,6 +149,24 @@ class AIService
             ];
         }
 
+        // 3. Recuperación de Activos de Alto Riesgo
+        $valesRiesgoAlto = Vale::where('estado', 'Activo')
+            ->where('fecha_limite', '<', Carbon::now()->subDays(7))
+            ->with(['trabajador', 'detalles.herramienta'])
+            ->take(3)->get();
+
+        foreach ($valesRiesgoAlto as $v) {
+            $dias = Carbon::now()->diffInDays($v->fecha_limite);
+            $primerDetalle = $v->detalles->first();
+            $herramientaNombre = $primerDetalle && $primerDetalle->herramienta
+                ? $primerDetalle->herramienta->nombre
+                : 'herramienta(s)';
+            $recommendations[] = [
+                'icon' => 'fa-skull-crossbones',
+                'text' => "RIESGO ALTO DE PÉRDIDA: {$v->trabajador->nombre} tiene '{$herramientaNombre}' con {$dias} días de retraso. Iniciar protocolo de reclamación."
+            ];
+        }
+
         return $recommendations;
     }
 
@@ -195,22 +215,27 @@ class AIService
         $logs = [];
 
         // 1. Vales recientes (Usamos fecha_creacion)
-        $vales = Vale::with(['trabajador', 'herramienta'])->orderBy('fecha_creacion', 'desc')->take(5)->get();
+        $vales = Vale::with(['trabajador', 'detalles.herramienta'])->orderBy('fecha_creacion', 'desc')->take(5)->get();
         foreach($vales as $v) {
+            $primerDetalle = $v->detalles->first();
+            $herramientaNombre = $primerDetalle && $primerDetalle->herramienta
+                ? $primerDetalle->herramienta->nombre
+                : 'múltiples activos';
             $logs[] = [
                 'time' => $v->fecha_creacion->format('H:i:s'),
                 'type' => 'TRANSACTION',
-                'msg' => "Vale #{$v->codigo_vale} procesado para {$v->trabajador->nombre} (Activo: {$v->herramienta->nombre})"
+                'msg' => "Vale #{$v->codigo_vale} procesado para {$v->trabajador->nombre} (Activo: {$herramientaNombre})"
             ];
         }
 
         // 2. Herramientas modificadas (Usamos creado_en ya que no hay updated_at)
-        $tools = Herramienta::orderBy('creado_en', 'desc')->take(5)->get();
+        $tools = Herramienta::with('modelAlmacen')->orderBy('creado_en', 'desc')->take(5)->get();
         foreach($tools as $t) {
+            $almacenNombre = $t->modelAlmacen ? $t->modelAlmacen->nombre : ($t->almacen ?? 'Almacén General');
             $logs[] = [
                 'time' => $t->creado_en->format('H:i:s'),
                 'type' => 'DATABASE',
-                'msg' => "Registro de activo '{$t->nombre}' sincronizado en {$t->almacen->nombre}"
+                'msg' => "Registro de activo '{$t->nombre}' sincronizado en {$almacenNombre}"
             ];
         }
 

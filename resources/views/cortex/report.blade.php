@@ -231,7 +231,7 @@
 
     <h2>2. Distribución de Bugs por Nivel de Severidad</h2>
     <div class="chart-container">
-        @php $maxSeverity = max($bugsBySeverity); @endphp
+        @php $maxSeverity = !empty($bugsBySeverity) ? max($bugsBySeverity) : 0; @endphp
         @foreach($bugsBySeverity as $severity => $count)
         <div class="bar-row">
             <span class="bar-label">{{ $severity }}</span>
@@ -249,7 +249,7 @@
 
     <h2>3. Distribución de Bugs por Categoría</h2>
     <div class="chart-container">
-        @php $maxCategory = max($bugsByCategory); @endphp
+        @php $maxCategory = !empty($bugsByCategory) ? max($bugsByCategory) : 0; @endphp
         @foreach($bugsByCategory as $category => $count)
         <div class="bar-row">
             <span class="bar-label">{{ $category }}</span>

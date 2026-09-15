@@ -4,15 +4,154 @@
 
 @section('content')
 <!-- Cargar Chart.js para los gráficos dinámicos del sistema -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('vendor/chartjs/chart.min.js') }}"></script>
 
 <div class="cortex-neural-container">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 255, 218, 0.3); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 255, 218, 0.6); }
+        .chat-bubble-bot {
+            background: linear-gradient(135deg, rgba(10, 25, 47, 0.8), rgba(17, 34, 64, 0.9));
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid #64FFDA;
+            color: #E6F1FF;
+        }
+        .chat-bubble-user {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.2));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-right: 4px solid #3B82F6;
+            color: #E6F1FF;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* ── Sandbox Security Buttons ─────────────────────────────────── */
+        .sandbox-segmented {
+            display: flex;
+            background: rgba(3, 7, 18, 0.7);
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 3px;
+            margin-top: 14px;
+            width: 100%;
+        }
+        .sandbox-segment-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #8892B0;
+            font-weight: 700;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 9px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            outline: none;
+        }
+        .sandbox-segment-btn:focus { outline: none; }
+        .sandbox-segment-btn:hover:not(.active-green):not(.active-red) {
+            background: rgba(255,255,255,0.06);
+            color: #cfd8e3;
+        }
+        .sandbox-segment-btn.active-green {
+            background: linear-gradient(135deg, #059669, #10B981);
+            color: #fff;
+            font-weight: 800;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+        }
+        .sandbox-segment-btn.active-red {
+            background: linear-gradient(135deg, #b91c1c, #EF4444);
+            color: #FFFFFF;
+            font-weight: 800;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
+            animation: sandbox-pulse-glow 1.8s ease-in-out infinite;
+        }
+        @keyframes sandbox-pulse-glow {
+            0%,100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35); }
+            50%      { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.65); }
+        }
+        /* ── Email Status Panel ───────────────────────────────────────── */
+        .email-stat-box {
+            background: var(--cortex-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+        }
+        .email-stat-number {
+            font-size: 1.6rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .email-stat-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8892B0;
+            margin-top: 4px;
+        }
+        .email-pulse-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #10B981;
+            box-shadow: 0 0 0 0 rgba(16,185,129,0.5);
+            animation: email-pulse 2s infinite;
+            display: inline-block;
+        }
+        @keyframes email-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+            70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        .email-pulse-dot.warn { background:#F59E0B; animation-name:email-pulse-warn; }
+        @keyframes email-pulse-warn {
+            0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+            70%  { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+        }
+        /* ── Responsive adjustments for mobile screen sizes ─────────────── */
+        @media (max-width: 768px) {
+            .noc-tabs {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                gap: 0.5rem !important;
+                padding-bottom: 0.6rem !important;
+                scrollbar-width: none !important; /* Firefox */
+                -ms-overflow-style: none !important; /* IE 10+ */
+            }
+            .noc-tabs::-webkit-scrollbar {
+                display: none !important; /* Safari and Chrome */
+            }
+            .noc-tab-btn {
+                flex-shrink: 0 !important;
+                white-space: nowrap !important;
+                font-size: 0.72rem !important;
+                padding: 0.4rem 0.8rem !important;
+            }
+            .noc-tab-btn.active::after {
+                bottom: -0.6rem !important;
+            }
+            .status-node {
+                gap: 0.5rem !important;
+                padding: 0.5rem 1rem !important;
+            }
+        }
+    </style>
     <x-cortex.assistant-shell :security-status="$aiInsights['security']['status']">
         
         <!-- HEADER: ESTADO GLOBAL -->
-        <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-4 mb-md-5">
             <div>
-                <h2 class="text-white font-weight-bold mb-1">Neural Operations Center</h2>
+                <h2 class="text-white font-weight-bold mb-1" style="font-size: calc(1.375rem + 1.5vw);">Neural Operations Center</h2>
                 <p class="text-muted m-0">Supervisión centralizada y autonomía de nivel 3 activa.</p>
                 <div class="mt-2">
                     <span class="badge" style="background: rgba(100,255,218,0.1); color: #64FFDA; border: 1px solid #64FFDA; font-size: 0.8rem; padding: 0.4em 0.8em;">
@@ -40,6 +179,8 @@
             <button class="noc-tab-btn" onclick="switchTab(this, 'security')">Seguridad</button>
             <button class="noc-tab-btn" onclick="switchTab(this, 'diagnostic')">Diagnóstico</button>
             <button class="noc-tab-btn" onclick="switchTab(this, 'intelligence')">Inteligencia</button>
+            <button class="noc-tab-btn" onclick="switchTab(this, 'activity')" style="color: #F59E0B;"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Actividad</button>
+            <button class="noc-tab-btn" onclick="switchTab(this, 'assistant')" style="color: #64FFDA;"><i class="fa-solid fa-robot mr-2"></i>Asistente</button>
         </div>
 
         <!-- CONTENIDO DE TABS -->
@@ -47,8 +188,111 @@
             
             <!-- TAB 1: MONITOREO -->
             <div id="tab-monitoring" class="noc-section">
-                
+
+                {{-- ── PANEL DE NOTIFICACIONES AUTOMÁTICAS ─── --}}
+                @if(Auth::user()->rol === 'Administrador')
+                @php
+                    $es = $emailStatus ?? [
+                        'email' => 'N/A', 'enviados_hoy' => 0,
+                        'vales_retrasados' => 0, 'agotadas' => 0,
+                        'ultima_revision' => 'N/A', 'error' => null, 'activo' => true
+                    ];
+                @endphp
+                <div class="row mb-4 mt-2">
+                    <div class="col-12">
+                        <div class="p-4 rounded" style="background: rgba(5,15,35,0.6); border: 1px solid rgba(100,255,218,0.15); border-left: 4px solid #64FFDA;">
+
+                            {{-- Cabecera del panel --}}
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="email-pulse-dot {{ $es['error'] ? 'warn' : '' }}"></div>
+                                    <div>
+                                        <h6 class="text-white font-weight-bold mb-0" style="font-size:0.95rem;">
+                                            <i class="fa-solid fa-envelope-circle-check mr-2" style="color:#64FFDA;"></i>
+                                            Sistema de Alertas Automático
+                                        </h6>
+                                        <p class="text-muted mb-0" style="font-size:0.72rem;">
+                                            Correo: <strong style="color:#64FFDA;">{{ $es['email'] }}</strong>
+                                            &nbsp;·&nbsp; Última revisión: <span style="color:#8892B0;">{{ $es['ultima_revision'] }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <span class="badge d-flex align-items-center gap-2"
+                                    style="background:{{ $es['error'] ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.12)' }};
+                                           color:{{ $es['error'] ? '#F59E0B' : '#10B981' }};
+                                           border:1px solid {{ $es['error'] ? '#F59E0B' : '#10B981' }};
+                                           font-size:0.72rem; font-weight:800; padding:6px 12px; border-radius:20px;">
+                                    <i class="fa-solid {{ $es['error'] ? 'fa-triangle-exclamation' : 'fa-circle-check' }}"></i>
+                                    {{ $es['error'] ? 'CON ADVERTENCIA' : 'ACTIVO' }}
+                                </span>
+                            </div>
+
+                            {{-- Tarjetas de estado --}}
+                            <div class="row g-3 mb-4">
+                                <div class="col-6 col-md-3">
+                                    <div class="email-stat-box">
+                                        <div class="email-stat-number" style="color:#64FFDA;">{{ $es['vales_retrasados'] }}</div>
+                                        <div class="email-stat-label">Vales retrasados</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="email-stat-box">
+                                        <div class="email-stat-number" style="color:#EF4444;">{{ $es['agotadas'] }}</div>
+                                        <div class="email-stat-label">Herr. agotadas</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="email-stat-box">
+                                        <div class="email-stat-number" style="color:#10B981;">{{ $es['enviados_hoy'] }}</div>
+                                        <div class="email-stat-label">Correos enviados</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="email-stat-box">
+                                        <div class="email-stat-number" style="color:#8892B0; font-size:1rem;">AUTO</div>
+                                        <div class="email-stat-label">Modo de envío</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Descripción del sistema --}}
+                            <div class="d-flex align-items-start gap-3" style="background:rgba(100,255,218,0.04); border-radius:8px; padding:12px;">
+                                <i class="fa-solid fa-circle-info mt-1" style="color:#64FFDA; flex-shrink:0;"></i>
+                                <p class="text-muted mb-0 small" style="line-height:1.6;">
+                                    El sistema revisa automáticamente cada vez que el administrador abre el Cortex.
+                                    Si hay <strong style="color:#E6F1FF;">vales retrasados</strong> o <strong style="color:#E6F1FF;">herramientas agotadas</strong>,
+                                    se envía un correo real a tu cuenta de Gmail sin que tengas que hacer nada.
+                                    Cada vale se notifica <u>solo una vez</u> para no saturar tu bandeja.
+                                </p>
+                            </div>
+
+                            @if($es['error'])
+                            <div class="mt-3 p-3 rounded d-flex align-items-start gap-3" style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3);">
+                                <i class="fa-solid fa-triangle-exclamation mt-1" style="color:#F59E0B; flex-shrink:0;"></i>
+                                <div>
+                                    <strong style="color:#F59E0B;">Advertencia de envío de correo:</strong>
+                                    <p class="mb-0 small" style="color:#FCD34D;">{{ $es['error'] }}</p>
+                                    <p class="mb-0 small mt-1" style="color:#8892B0;">Verifica en <code style="color:#64FFDA;">.env</code>: <code>MAIL_PASSWORD</code> y <code>MAIL_SCHEME=null</code>.</p>
+                                </div>
+                            </div>
+                            @endif
+
+                            @if($es['enviados_hoy'] > 0)
+                            <div class="mt-3 p-3 rounded d-flex align-items-center gap-3" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25);">
+                                <i class="fa-solid fa-paper-plane" style="color:#10B981; font-size:1.1rem;"></i>
+                                <span style="color:#10B981; font-weight:600;">
+                                    ✅ Se enviaron {{ $es['enviados_hoy'] }} correo(s) de alerta en esta sesión
+                                </span>
+                            </div>
+                            @endif
+
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 @if(count($aiInsights['anomalies']) > 0)
+
                 <div class="row mb-5">
                     <div class="col-12">
                         <div class="p-4 rounded position-relative overflow-hidden" style="background: rgba(244, 63, 94, 0.05); border: 1px solid rgba(244, 63, 94, 0.3); box-shadow: 0 0 20px rgba(244, 63, 94, 0.1);">
@@ -124,6 +368,26 @@
                                 <button class="btn-cortex-neural w-100 mb-3" style="padding: 1rem !important; border-radius: 12px !important;" onclick="runAIScan()">
                                     <i class="fa-solid fa-atom fa-spin mr-3"></i> RE-INICIAR ESCANEO
                                 </button>
+
+                                @if(!session('cortex_all_solved'))
+                                <button class="btn w-100 mb-3 d-flex justify-content-center align-items-center" 
+                                   style="padding: 1rem; border-radius: 12px; font-weight: bold; border: 1px solid rgba(100, 255, 218, 0.5); background: linear-gradient(45deg, rgba(100, 255, 218, 0.05), rgba(100, 255, 218, 0.15)); color: #64FFDA; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(100, 255, 218, 0.1);" 
+                                   onmouseover="this.style.background='linear-gradient(45deg, rgba(100, 255, 218, 0.1), rgba(100, 255, 218, 0.25))'; this.style.boxShadow='0 6px 20px rgba(100, 255, 218, 0.3)'; this.style.transform='translateY(-2px)';" 
+                                   onmouseout="this.style.background='linear-gradient(45deg, rgba(100, 255, 218, 0.05), rgba(100, 255, 218, 0.15))'; this.style.boxShadow='0 4px 15px rgba(100, 255, 218, 0.1)'; this.style.transform='translateY(0)';"
+                                   onclick="solveAllErrors()">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-3" style="font-size: 1.2rem;"></i> 
+                                    <span>Autopiloto: Corregir Todo</span>
+                                </button>
+                                @else
+                                <div class="p-3 mb-3 rounded text-center" style="background: rgba(100, 255, 218, 0.05); border: 1px solid rgba(100, 255, 218, 0.3);">
+                                    <i class="fa-solid fa-circle-check text-success mr-2"></i>
+                                    <span class="text-white small font-weight-bold" style="letter-spacing: 0.5px; color: #64FFDA !important;">Optimización Global Activa</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-muted w-100 mb-3" style="text-decoration: none; font-size: 0.75rem; color: #8892B0 !important;" onclick="resetSimulation()">
+                                    <i class="fa-solid fa-rotate-right mr-2"></i> Reiniciar simulación (ver errores)
+                                </button>
+                                @endif
+
                                 <a href="{{ route('cortex.export_audit') }}" class="btn w-100 d-flex justify-content-center align-items-center" 
                                    style="padding: 1rem; border-radius: 12px; font-weight: bold; border: 1px solid rgba(244, 63, 94, 0.5); background: linear-gradient(45deg, rgba(244, 63, 94, 0.05), rgba(244, 63, 94, 0.15)); color: #F43F5E; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(244, 63, 94, 0.1);" 
                                    onmouseover="this.style.background='linear-gradient(45deg, rgba(244, 63, 94, 0.1), rgba(244, 63, 94, 0.25))'; this.style.boxShadow='0 6px 20px rgba(244, 63, 94, 0.3)'; this.style.transform='translateY(-2px)';" 
@@ -141,6 +405,60 @@
 
             <!-- TAB 2: SEGURIDAD -->
             <div id="tab-security" class="noc-section d-none">
+
+                {{-- ── CORTEX SECURITY SANDBOX ─── --}}
+                @if(Auth::user()->rol === 'Administrador')
+                @php $xssActive = session()->get('cortex_xss_protection', true); $sqliActive = session()->get('cortex_sqli_protection', true); @endphp
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="p-4 rounded" style="background: rgba(10, 25, 47, 0.4); border: 1px solid rgba(100, 255, 218, 0.15); border-left: 4px solid #64FFDA; text-align: left;">
+                            <h6 class="text-white font-weight-bold mb-3 d-flex align-items-center">
+                                <i class="fa-solid fa-shield-halved mr-2" style="color:#64FFDA;"></i>
+                                Cortex Security Sandbox &nbsp;<small class="text-muted">(Exposición de Vulnerabilidades en Vivo)</small>
+                            </h6>
+                            <p class="text-muted small mb-4">Usa este entorno de pruebas interactivo para demostrar ataques de seguridad en vivo. Activa/desactiva las defensas del sistema en tiempo real.</p>
+                            @if(session('demo_status_changed'))
+                            <div class="alert py-2 px-3 rounded mb-3 small d-flex align-items-center gap-2" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color:#10B981; font-weight: 600;">
+                                <i class="fa-solid fa-circle-check"></i> {{ session('demo_status_changed') }}
+                            </div>
+                            @endif
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <div class="p-3 rounded" style="background: rgba(17,34,64,0.4); border: 1px solid #1e293b; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span style="font-weight:700;color:#E6F1FF;font-size:0.85rem;">Filtro de Sanitización XSS</span>
+                                                <span class="badge" style="background:{{ $xssActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }};color:{{ $xssActive ? '#10B981' : '#EF4444' }};border:1px solid {{ $xssActive ? '#10B981' : '#EF4444' }};font-size:0.7rem;font-weight:700;">{{ $xssActive ? 'ACTIVO' : 'VULNERABLE' }}</span>
+                                            </div>
+                                            <p class="text-muted small mb-3" style="font-size:0.75rem;">Evita que atacantes guarden código malicioso <code style="color:#64FFDA;">&lt;script&gt;</code> en formularios.</p>
+                                        </div>
+                                        <div class="sandbox-segmented">
+                                            <form method="POST" action="{{ route('cortex.demo.toggle_xss') }}" style="display:contents;">@csrf<input type="hidden" name="status" value="1"><button type="submit" class="sandbox-segment-btn {{ $xssActive ? 'active-green' : '' }}"><i class="fa-solid fa-shield"></i> Protegido</button></form>
+                                            <form method="POST" action="{{ route('cortex.demo.toggle_xss') }}" style="display:contents;">@csrf<input type="hidden" name="status" value="0"><button type="submit" class="sandbox-segment-btn {{ !$xssActive ? 'active-red' : '' }}"><i class="fa-solid fa-triangle-exclamation"></i> Vulnerable</button></form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded" style="background: rgba(17,34,64,0.4); border: 1px solid #1e293b; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span style="font-weight:700;color:#E6F1FF;font-size:0.85rem;">Consultas Preparadas SQLi</span>
+                                                <span class="badge" style="background:{{ $sqliActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)' }};color:{{ $sqliActive ? '#10B981' : '#EF4444' }};border:1px solid {{ $sqliActive ? '#10B981' : '#EF4444' }};font-size:0.7rem;font-weight:700;">{{ $sqliActive ? 'ACTIVO' : 'VULNERABLE' }}</span>
+                                            </div>
+                                            <p class="text-muted small mb-3" style="font-size:0.75rem;">Evita inyecciones SQL mediante consultas preparadas y validación de parámetros.</p>
+                                        </div>
+                                        <div class="sandbox-segmented">
+                                            <form method="POST" action="{{ route('cortex.demo.toggle_sqli') }}" style="display:contents;">@csrf<input type="hidden" name="status" value="1"><button type="submit" class="sandbox-segment-btn {{ $sqliActive ? 'active-green' : '' }}"><i class="fa-solid fa-shield"></i> Protegido</button></form>
+                                            <form method="POST" action="{{ route('cortex.demo.toggle_sqli') }}" style="display:contents;">@csrf<input type="hidden" name="status" value="0"><button type="submit" class="sandbox-segment-btn {{ !$sqliActive ? 'active-red' : '' }}"><i class="fa-solid fa-triangle-exclamation"></i> Vulnerable</button></form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <div class="row">
                     <div class="col-md-4">
                         <div class="text-center p-5 rounded mb-4" style="background: rgba(10, 25, 47, 0.4); border: 1px solid rgba(100, 255, 218, 0.1);">
@@ -421,6 +739,123 @@
                 </div>
             </div>
 
+            <!-- TAB 5: ASISTENTE VIRTUAL -->
+            <div id="tab-assistant" class="noc-section d-none">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <x-cortex.module-card title="Chat NLP Cortex" icon="fa-comment-dots">
+                            <div class="cortex-chat-window d-flex flex-column h-100" style="min-height: 400px;">
+                                <div id="cortex-chat-messages" class="flex-grow-1 p-4 overflow-auto" style="background: rgba(10,25,47,0.3); border-radius: 8px; margin-bottom: 1rem; max-height: 500px;">
+                                    <div class="chat-message mb-4" style="text-align: left;">
+                                        <div class="d-inline-block p-3 rounded" style="background: rgba(100, 255, 218, 0.1); border-left: 4px solid #64FFDA; color: #E6F1FF; max-width: 80%;">
+                                            <strong>Cortex:</strong> Hola, soy el Asistente Neuronal. Puedes preguntarme sobre herramientas no devueltas, stock disponible o quién tiene alguna herramienta específica.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="cortex-chat-input d-flex flex-column gap-2">
+                                    <div class="d-flex gap-2 flex-wrap mb-2">
+                                        <button type="button" class="badge" style="background: rgba(100, 255, 218, 0.1); color: #64FFDA; border: 1px solid rgba(100, 255, 218, 0.3); cursor: pointer; padding: 6px 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(100, 255, 218, 0.2)'" onmouseout="this.style.background='rgba(100, 255, 218, 0.1)'" onclick="document.getElementById('cortex-query-input').value = 'Ver lista de herramientas'; sendCortexQuery();"><i class="fa-solid fa-list mr-1"></i> Ver Catálogo</button>
+                                        <button type="button" class="badge" style="background: rgba(100, 255, 218, 0.1); color: #64FFDA; border: 1px solid rgba(100, 255, 218, 0.3); cursor: pointer; padding: 6px 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(100, 255, 218, 0.2)'" onmouseout="this.style.background='rgba(100, 255, 218, 0.1)'" onclick="document.getElementById('cortex-query-input').value = 'Qué herramientas están retrasadas?'; sendCortexQuery();"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Retrasadas</button>
+                                        <button type="button" class="badge" style="background: rgba(100, 255, 218, 0.1); color: #64FFDA; border: 1px solid rgba(100, 255, 218, 0.3); cursor: pointer; padding: 6px 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(100, 255, 218, 0.2)'" onmouseout="this.style.background='rgba(100, 255, 218, 0.1)'" onclick="document.getElementById('cortex-query-input').value = 'Qué herramientas tienen stock bajo?'; sendCortexQuery();"><i class="fa-solid fa-arrow-trend-down mr-1"></i> Stock Bajo</button>
+                                        <button type="button" class="badge" style="background: rgba(100, 255, 218, 0.1); color: #64FFDA; border: 1px solid rgba(100, 255, 218, 0.3); cursor: pointer; padding: 6px 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(100, 255, 218, 0.2)'" onmouseout="this.style.background='rgba(100, 255, 218, 0.1)'" onclick="document.getElementById('cortex-query-input').value = 'Cuáles son las herramientas más prestadas?'; sendCortexQuery();"><i class="fa-solid fa-star mr-1"></i> Más Prestadas</button>
+                                    </div>
+                                    <div class="d-flex w-100">
+                                        <input type="text" id="cortex-query-input" class="form-control" placeholder="Ej: ¿Dónde está el taladro? o ¿Qué herramientas están retrasadas?" style="background: rgba(10,25,47,0.8); border: 1px solid rgba(100,255,218,0.3); color: #E6F1FF; padding: 12px; border-radius: 8px 0 0 8px;" onkeypress="if(event.key === 'Enter') sendCortexQuery();">
+                                        <button class="btn btn-primary" onclick="sendCortexQuery()" style="border-radius: 0 8px 8px 0; background: #64FFDA; color: #0A192F; font-weight: bold; border: none; padding: 0 20px;">
+                                            <i class="fa-solid fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </x-cortex.module-card>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: ACTIVIDAD - Registro de Auditoría -->
+            <div id="tab-activity" class="noc-section d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="text-white mb-0">
+                        <i class="fa-solid fa-clock-rotate-left mr-2" style="color:#F59E0B;"></i>
+                        Registro de Actividad del Sistema
+                    </h5>
+                    <span class="badge" style="background:rgba(245,158,11,0.15); color:#F59E0B; border:1px solid #F59E0B; font-size:0.75rem; padding:6px 12px;">
+                        Últimas {{ $auditLogs->count() }} acciones registradas
+                    </span>
+                </div>
+
+                <!-- Filtro rápido -->
+                <div class="mb-3">
+                    <input type="text" id="filtro-actividad" onkeyup="filtrarActividad()" placeholder="Filtrar por acción, usuario, descripción..."
+                        style="width:100%; background:rgba(10,25,47,0.8); border:1px solid rgba(100,255,218,0.2); color:#E6F1FF; padding:10px 14px; border-radius:8px; outline:none;">
+                </div>
+
+                <div class="table-container" style="border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.07);">
+                    <table class="table" id="tabla-actividad" style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                        <thead>
+                            <tr>
+                                <th style="padding:0.85rem 1rem; background:#0d2137; color:#8892B0; border-bottom:1px solid rgba(255,255,255,0.07); white-space:nowrap;">Acción</th>
+                                <th style="padding:0.85rem 1rem; background:#0d2137; color:#8892B0; border-bottom:1px solid rgba(255,255,255,0.07);">Ejecutado por</th>
+                                <th style="padding:0.85rem 1rem; background:#0d2137; color:#8892B0; border-bottom:1px solid rgba(255,255,255,0.07);">Tabla</th>
+                                <th style="padding:0.85rem 1rem; background:#0d2137; color:#8892B0; border-bottom:1px solid rgba(255,255,255,0.07);">Descripción</th>
+                                <th style="padding:0.85rem 1rem; background:#0d2137; color:#8892B0; border-bottom:1px solid rgba(255,255,255,0.07); white-space:nowrap;">Fecha y Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($auditLogs as $log)
+                            @php
+                                $accionColor = match($log->accion) {
+                                    'ELIMINAR' => ['bg' => 'rgba(239,68,68,0.12)', 'color' => '#EF4444', 'icon' => 'fa-trash'],
+                                    'CREAR'    => ['bg' => 'rgba(16,185,129,0.12)', 'color' => '#10B981', 'icon' => 'fa-plus'],
+                                    'EDITAR'   => ['bg' => 'rgba(56,189,248,0.12)', 'color' => '#38BDF8', 'icon' => 'fa-pen'],
+                                    default    => ['bg' => 'rgba(139,148,177,0.12)', 'color' => '#8892B0', 'icon' => 'fa-circle-info'],
+                                };
+                                $rowBg = $log->accion === 'ELIMINAR' ? 'background: rgba(239,68,68,0.04); border-left: 3px solid rgba(239,68,68,0.4);' : '';
+                            @endphp
+                            <tr class="fila-actividad" style="border-bottom:1px solid rgba(255,255,255,0.05); {{ $rowBg }}">
+                                <td style="padding:0.75rem 1rem;">
+                                    <span style="background:{{ $accionColor['bg'] }}; color:{{ $accionColor['color'] }}; padding:3px 10px; border-radius:20px; font-weight:700; font-size:0.72rem; white-space:nowrap;">
+                                        <i class="fa-solid {{ $accionColor['icon'] }} mr-1"></i>
+                                        {{ $log->accion }}
+                                    </span>
+                                </td>
+                                <td style="padding:0.75rem 1rem; color:#E6F1FF;">
+                                    @if($log->usuario)
+                                        <div style="font-weight:600;">{{ $log->usuario->nombre }}</div>
+                                        <div style="color:#8892B0; font-size:0.75rem;">
+                                            <i class="fa-solid fa-at" style="font-size:0.65rem;"></i> {{ $log->usuario->usuario }}
+                                            &nbsp;·&nbsp;
+                                            <span style="color:
+                                                @if($log->usuario->rol === 'Administrador') #EF4444
+                                                @elseif($log->usuario->rol === 'Almacenero') #F59E0B
+                                                @else #818CF8
+                                                @endif
+                                            ;">{{ $log->usuario->rol }}</span>
+                                        </div>
+                                    @else
+                                        <span style="color:#8892B0; font-style:italic;">Sistema</span>
+                                    @endif
+                                </td>
+                                <td style="padding:0.75rem 1rem;">
+                                    <code style="color:#64FFDA; font-size:0.75rem; background:rgba(100,255,218,0.07); padding:2px 6px; border-radius:4px;">{{ $log->tabla }}</code>
+                                </td>
+                                <td style="padding:0.75rem 1rem; color:#CCD6F6; line-height:1.4;">
+                                    {{ $log->descripcion }}
+                                </td>
+                                <td style="padding:0.75rem 1rem; color:#8892B0; white-space:nowrap; font-size:0.75rem;">
+                                    {{ $log->fecha ? \Carbon\Carbon::parse($log->fecha)->format('d/m/Y H:i') : 'N/A' }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:#8892B0; padding:2rem;">No hay registros de actividad todavía.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
     </x-cortex.assistant-shell>
@@ -436,6 +871,60 @@ function switchTab(btn, tabId) {
     document.querySelectorAll('.noc-section').forEach(sec => sec.classList.add('d-none'));
     const target = document.getElementById('tab-' + tabId);
     if (target) target.classList.remove('d-none');
+}
+
+function filtrarActividad() {
+    const filtro = document.getElementById('filtro-actividad').value.toLowerCase();
+    document.querySelectorAll('#tabla-actividad .fila-actividad').forEach(function(fila) {
+        const texto = fila.innerText.toLowerCase();
+        fila.style.display = texto.includes(filtro) ? '' : 'none';
+    });
+}
+
+function sendCortexQuery() {
+    const input = document.getElementById('cortex-query-input');
+    const msg = input.value.trim();
+    if(!msg) return;
+
+    appendChatMessage('Tú', msg, 'user');
+    input.value = '';
+
+    fetch('/cortex/ask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ query: msg })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            appendChatMessage('Cortex', data.response.type === 'html' ? data.response.html : data.response.message, 'bot');
+        } else {
+            appendChatMessage('Sistema', 'Error procesando la consulta.', 'error');
+        }
+    })
+    .catch(e => appendChatMessage('Sistema', 'Fallo de conexión.', 'error'));
+}
+
+function appendChatMessage(sender, content, type) {
+    const container = document.getElementById('cortex-chat-messages');
+    const align = type === 'user' ? 'text-align: right;' : 'text-align: left;';
+    const bubbleClass = type === 'user' ? 'chat-bubble-user' : (type === 'error' ? 'chat-bubble-bot border-left-danger' : 'chat-bubble-bot');
+    const additionalStyle = type === 'error' ? 'border-left-color: #F43F5E;' : '';
+    
+    container.innerHTML += `
+        <div class="chat-message mb-4" style="${align}">
+            <div class="d-inline-block p-3 rounded ${bubbleClass}" style="max-width: 85%; text-align: left; ${additionalStyle}">
+                <div class="mb-2" style="font-size: 0.8rem; font-weight: bold; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px;">
+                    <i class="fa-solid ${type === 'user' ? 'fa-user' : 'fa-microchip'} mr-2"></i> ${sender}
+                </div>
+                <div class="mt-1" style="line-height: 1.5;">${content}</div>
+            </div>
+        </div>
+    `;
+    container.scrollTop = container.scrollHeight;
 }
 
 function runRepair(component) {
@@ -577,7 +1066,6 @@ function restoreSecurityIncidents() {
                 background: '#0A192F',
                 color: '#E6F1FF'
             });
-
             fetch('/cortex/incident/restore', {
                 method: 'POST',
                 headers: {
@@ -596,6 +1084,106 @@ function restoreSecurityIncidents() {
                         color: '#E6F1FF'
                     }).then(() => window.location.reload());
                 }
+            });
+        }
+    });
+}
+
+function resetSimulation() {
+    Swal.fire({
+        title: 'REINICIAR SIMULACIÓN',
+        text: '¿Deseas restaurar la simulación original con todas las alertas e incidentes de ejemplo?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#F43F5E',
+        cancelButtonColor: '#8892B0',
+        confirmButtonText: 'SÍ, REINICIAR',
+        cancelButtonText: 'CANCELAR',
+        background: '#0A192F',
+        color: '#E6F1FF'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/cortex/reset-all', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Simulación Reiniciada',
+                        text: data.message,
+                        background: '#0A192F',
+                        color: '#E6F1FF'
+                    }).then(() => window.location.reload());
+                }
+            });
+        }
+    });
+}
+
+function solveAllErrors() {
+    Swal.fire({
+        title: 'AUTOPILOTO DE MITIGACIÓN',
+        text: '¿Deseas autorizar a Cortex para corregir y optimizar de manera autónoma todos los errores y alertas del sistema?',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#64FFDA',
+        cancelButtonColor: '#F43F5E',
+        confirmButtonText: 'SÍ, OPTIMIZAR',
+        cancelButtonText: 'CANCELAR',
+        background: '#0A192F',
+        color: '#E6F1FF'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'OPTIMIZANDO NÚCLEO',
+                html: '<div class="text-center"><i class="fa-solid fa-wand-magic-sparkles fa-spin fa-2x text-primary mb-3"></i><p style="font-family:\'JetBrains Mono\'">> Reconfigurando directivas de red...<br>> Sanando dependencias y variables...<br>> Eliminando registros obsoletos...</p></div>',
+                showConfirmButton: false,
+                background: '#0A192F',
+                color: '#E6F1FF'
+            });
+
+            fetch('/cortex/solve-all', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sistema Corregido',
+                        text: data.message,
+                        background: '#0A192F',
+                        color: '#E6F1FF',
+                        confirmButtonColor: '#64FFDA'
+                    }).then(() => window.location.reload());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Mitigación',
+                        text: data.message,
+                        background: '#0A192F',
+                        color: '#E6F1FF'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fallo de Conexión',
+                    text: 'No se pudo establecer contacto con el núcleo de Cortex.',
+                    background: '#0A192F',
+                    color: '#E6F1FF'
+                });
             });
         }
     });

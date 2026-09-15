@@ -53,13 +53,21 @@ document.addEventListener('DOMContentLoaded', function () {
     // Deshabilitar botón submit tras primer click (evitar doble envío)
     // =========================================================
     document.querySelectorAll('form').forEach(function (form) {
-        form.addEventListener('submit', function () {
+        form.addEventListener('submit', function (e) {
+            // Si el submit fue cancelado (por ejemplo, confirm retornó false), no hacer nada
+            if (e.defaultPrevented) {
+                return;
+            }
+            
             const btn = form.querySelector('button[type="submit"]');
             if (btn) {
                 setTimeout(function () {
+                    // Si el submit fue cancelado durante el confirm() síncrono, salimos
+                    if (e.defaultPrevented) return;
+                    
                     btn.disabled = true;
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
-                }, 10);
+                }, 50);
             }
         });
     });
@@ -78,3 +86,41 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// =========================================================
+// Funciones globales para controlar el Sidebar en móviles
+// =========================================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const icon = document.getElementById('hamburger-icon');
+
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        
+        // Cambiar icono entre barra y cruz
+        if (icon) {
+            if (sidebar.classList.contains('active')) {
+                icon.className = 'fa-solid fa-xmark';
+            } else {
+                icon.className = 'fa-solid fa-bars';
+            }
+        }
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const icon = document.getElementById('hamburger-icon');
+
+    if (sidebar && overlay) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        if (icon) {
+            icon.className = 'fa-solid fa-bars';
+        }
+    }
+}
+

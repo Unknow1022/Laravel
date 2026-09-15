@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Herramienta;
 use App\Models\Log;
 use App\Models\ValeDetalle;
+use App\Mail\HerramientaAgotadaMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class HerramientasController extends Controller
 {
@@ -15,17 +17,50 @@ class HerramientasController extends Controller
         $busqueda = substr(strip_tags($request->query('search', '')), 0, 100);
         $busqueda_segura = str_replace(['%', '_'], ['\%', '\_'], $busqueda);
         
-        $herramientas = Herramienta::with(['modelAlmacen', 'categoria'])
-            ->when($busqueda_segura, function ($query, $busqueda_segura) {
-                return $query->where('nombre', 'like', "%{$busqueda_segura}%")
-                             ->orWhere('codigo', 'like', "%{$busqueda_segura}%")
-                             ->orWhereHas('modelAlmacen', function($q) use ($busqueda_segura) {
-                                 $q->where('nombre', 'like', "%{$busqueda_segura}%");
-                             })
-                             ->orWhereHas('categoria', function($q) use ($busqueda_segura) {
-                                 $q->where('nombre', 'like', "%{$busqueda_segura}%");
-                             });
-            })->orderBy('nombre', 'asc')->get();
+        $sqliProtection = session()->get('cortex_sqli_protection', true);
+        $executedQuery = "";
+
+        if (!$sqliProtection && !empty($busqueda)) {
+            // Consulta vulnerable con concatenación directa de strings
+            $rawSql = "SELECT * FROM herramientas WHERE deleted_at IS NULL AND (nombre LIKE '%" . $busqueda . "%' OR codigo LIKE '%" . $busqueda . "%')";
+            $executedQuery = $rawSql;
+            
+            try {
+                // Ejecutar consulta raw
+                $results = \Illuminate\Support\Facades\DB::select($rawSql);
+                // Hidratar a modelos de Herramienta para no romper la vista
+                $herramientas = Herramienta::hydrate($results);
+                // Cargar relaciones
+                $herramientas->load(['modelAlmacen', 'categoria']);
+            } catch (\Exception $e) {
+                // Capturar errores de sintaxis SQL (comunes durante inyección) y mostrarlos en el debugger
+                $executedQuery .= "\n\n❌ ERROR SQL: " . $e->getMessage();
+                $herramientas = collect();
+            }
+        } else {
+            // Consulta parametrizada segura (Eloquent original)
+            $herramientas = Herramienta::with(['modelAlmacen', 'categoria'])
+                ->when($busqueda_segura, function ($query, $busqueda_segura) {
+                    return $query->where('nombre', 'like', "%{$busqueda_segura}%")
+                                 ->orWhere('codigo', 'like', "%{$busqueda_segura}%")
+                                 ->orWhereHas('modelAlmacen', function($q) use ($busqueda_segura) {
+                                     $q->where('nombre', 'like', "%{$busqueda_segura}%");
+                                 })
+                                 ->orWhereHas('categoria', function($q) use ($busqueda_segura) {
+                                     $q->where('nombre', 'like', "%{$busqueda_segura}%");
+                                 });
+                })->orderBy('nombre', 'asc')->get();
+
+            // Guardar representación de la query ejecutada
+            if (!empty($busqueda)) {
+                $executedQuery = "SELECT * FROM herramientas \nWHERE deleted_at IS NULL \n  AND (nombre LIKE ? OR codigo LIKE ? OR ...)\n\nBindings: ['%" . $busqueda . "%', '%" . $busqueda . "%']";
+            } else {
+                $executedQuery = "SELECT * FROM herramientas WHERE deleted_at IS NULL ORDER BY nombre ASC";
+            }
+        }
+
+        // Compartir query ejecutada con la sesión
+        session(['cortex_last_query' => $executedQuery]);
 
         return view('herramientas.index', compact('herramientas', 'busqueda'));
     }
@@ -67,6 +102,16 @@ class HerramientasController extends Controller
             'fecha' => now()
         ]);
 
+        // Si el stock inicial es 0 (error de carga), notificar
+        if ($herramienta->stock_disponible <= 0) {
+            try {
+                $herramienta->load(['modelAlmacen', 'categoria']);
+                Mail::to('jesusmanuelriveragarcia6@gmail.com')->send(new HerramientaAgotadaMail($herramienta));
+            } catch (\Exception $e) {
+                \Log::warning("[Stock] No se pudo enviar correo agotado: " . $e->getMessage());
+            }
+        }
+
         return redirect()->route('herramientas.index')->with('exito', '1');
     }
 
@@ -102,12 +147,22 @@ class HerramientasController extends Controller
             'fecha' => now()
         ]);
 
+        // Notificar si el stock disponible llegó a 0
+        if ($herramienta->fresh()->stock_disponible <= 0) {
+            try {
+                $herramienta->load(['modelAlmacen', 'categoria']);
+                Mail::to('jesusmanuelriveragarcia6@gmail.com')->send(new HerramientaAgotadaMail($herramienta));
+            } catch (\Exception $e) {
+                \Log::warning("[Stock] No se pudo enviar correo agotado: " . $e->getMessage());
+            }
+        }
+
         return redirect()->route('herramientas.index')->with('modificado', '1');
     }
 
     public function show(Herramienta $herramienta)
     {
-        if (!in_array(Auth::user()->rol, ['Administrador', 'Almacenero'])) {
+        if (!in_array(Auth::user()->rol, ['Administrador', 'Almacenero', 'Supervisor'])) {
             abort(403);
         }
 

@@ -118,4 +118,28 @@ class ReportesController extends Controller
 
         return view('reportes.temporal', compact('reporte', 'inicio', 'fin'));
     }
+
+    public function exportBugWord()
+    {
+        if (!in_array(Auth::user()->rol, ['Administrador', 'Supervisor'])) {
+            abort(403);
+        }
+        $headers = array(
+            "Content-type" => "application/vnd.ms-word",
+            "Content-Disposition" => "attachment;Filename=Reporte_Bug_QA.doc"
+        );
+        return response()->view('reports.bug_report_word')->withHeaders($headers);
+    }
+
+    public function exportMatrizWord()
+    {
+        if (!in_array(Auth::user()->rol, ['Administrador', 'Supervisor'])) {
+            abort(403);
+        }
+        $headers = array(
+            "Content-type" => "application/vnd.ms-word",
+            "Content-Disposition" => "attachment;Filename=Matriz_Dispositivos_QA.doc"
+        );
+        return response()->view('reports.matriz_dispositivos_word')->withHeaders($headers);
+    }
 }

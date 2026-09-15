@@ -84,4 +84,49 @@ class CortexAutomationTest extends TestCase
             'user_id' => $user->id,
         ]);
     }
+
+    /**
+     * Test that solve_all can be triggered by admin.
+     */
+    public function test_admin_can_trigger_solve_all()
+    {
+        $admin = Usuario::factory()->create(['rol' => 'Administrador']);
+
+        $response = $this->actingAs($admin)->post('/cortex/solve-all');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true
+        ]);
+        
+        $this->assertTrue(session()->has('cortex_all_solved'));
+    }
+
+    /**
+     * Test export audit report successfully.
+     */
+    public function test_admin_can_export_audit_report()
+    {
+        $admin = Usuario::factory()->create(['rol' => 'Administrador']);
+
+        $response = $this->actingAs($admin)->get('/cortex/export-audit');
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    /**
+     * Test export audit report when system is solved.
+     */
+    public function test_admin_can_export_audit_report_when_solved()
+    {
+        $admin = Usuario::factory()->create(['rol' => 'Administrador']);
+
+        $response = $this->actingAs($admin)
+            ->withSession(['cortex_all_solved' => true])
+            ->get('/cortex/export-audit');
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+    }
 }

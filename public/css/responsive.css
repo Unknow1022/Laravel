@@ -1,0 +1,282 @@
+/* ==========================================================================
+   DISEÑO RESPONSIVO Y ADAPTATIVO — ALMACÉN INTELIGENTE
+   ========================================================================== */
+
+/* Variables y ajustes globales */
+@media (max-width: 1024px) {
+    .premium-header {
+        padding: 0 1.5rem !important;
+    }
+}
+
+/* Dispositivos Móviles y Tabletas (Menos de 768px) */
+@media (max-width: 768px) {
+    /* Layout principal */
+    .wrapper {
+        position: relative;
+    }
+
+    /* Sidebar oculto por defecto */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        height: 100vh;
+        z-index: 10000;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 15px 0 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Overlay para el fondo difuminado al abrir sidebar */
+    #sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(5, 13, 26, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    #sidebar-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* Header principal alineado horizontalmente */
+    .premium-header {
+        height: 65px !important;
+        padding: 0 1rem !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        background: #FFFFFF !important;
+    }
+
+    .header-left {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .header-right {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+
+    .user-profile-dropdown {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Botón Hamburguesa visible en móvil */
+    .hamburger-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: rgba(100, 255, 218, 0.05);
+        border: 1px solid rgba(100, 255, 218, 0.2);
+        color: var(--primary-color);
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .hamburger-btn:hover {
+        background: rgba(100, 255, 218, 0.15);
+    }
+
+    /* Reloj en vivo */
+    #live-clock {
+        display: none !important; /* Ocultar en móvil para ganar espacio */
+    }
+
+    /* Perfil de usuario en el header */
+    .user-info-chip {
+        padding: 0.4rem 0.6rem !important;
+        padding-right: 0.6rem !important;
+        gap: 0.5rem !important;
+    }
+
+    .user-meta {
+        display: none !important; /* Ocultar texto en móviles */
+    }
+
+    .logout-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+    }
+
+    /* Área de Contenido */
+    .page-content {
+        padding: 1.25rem !important;
+    }
+
+    /* Rejilla de tarjetas estadísticas */
+    .grid-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+
+    .col-6, .col-8, .col-4 {
+        grid-column: span 12 !important;
+    }
+
+    /* Tarjetas de estadísticas */
+    .stat-card {
+        padding: 1.25rem !important;
+        gap: 1rem !important;
+    }
+
+    .stat-details p {
+        font-size: 1.8rem !important;
+    }
+
+    /* Tablas responsivas: solo el wrapper hace scroll, no el <table> en sí */
+    .table-container, .table-responsive {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-bottom: 1rem !important;
+    }
+    /* El table sigue siendo table (no block), para que los forms inline-block no se rompan */
+    .table {
+        min-width: 600px !important;
+    }
+    
+    .table th, .table td {
+        padding: 0.75rem 0.85rem !important; /* Más compacto en celular */
+        font-size: 0.85rem !important;
+    }
+
+    /* Botones de acción táctiles en móvil (mínimo 42px para el dedo) */
+    .action-btn {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.15rem !important;
+        margin: 2px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+    }
+
+    /* Evitar zoom automático molesto en móviles iOS/Android */
+    input, select, textarea, .form-control {
+        font-size: 16px !important; /* Obligatorio en móviles para evitar auto-zoom */
+        padding: 0.65rem 0.85rem !important;
+    }
+
+    /* Formularios */
+    form div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+
+    form div[style*="display: flex"] > div {
+        flex: none !important;
+        width: 100% !important;
+    }
+
+    .card {
+        padding: 1.25rem !important;
+    }
+
+    /* Módulo de Inteligencia Artificial (Cortex) */
+    .cortex-grid-modules {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+
+    .cortex-card-premium {
+        padding: 1.5rem !important;
+    }
+
+    .cortex-header-neural {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .cortex-action-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .btn-cortex-action, .btn-cortex-neural {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem 1.5rem !important;
+    }
+
+    /* Tabs del NOC de Cortex */
+    .noc-tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .noc-tab-btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Ajustes finos para pantallas muy pequeñas (menos de 480px) */
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.25rem !important;
+    }
+
+    /* Solo los botones de formularios principales se expanden, NO los action-btn de tablas */
+    .btn:not(.action-btn):not(.btn-secondary):not(.logout-btn):not(.hamburger-btn) {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Botón flotante de Cortex */
+    #cortex-rescue-widget {
+        bottom: 1rem !important;
+        right: 1rem !important;
+    }
+}
+
+/* Ajustes responsivos indestructibles para el panel Cortex Assistant */
+@media (max-width: 768px) {
+    .cortex-container {
+        padding: 1rem !important;
+        border-radius: 16px !important;
+    }
+    .cortex-nodes {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-start !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+    }
+    .status-node {
+        flex: 1 1 calc(50% - 0.5rem) !important;
+        min-width: 130px !important;
+        justify-content: flex-start !important;
+    }
+}
+

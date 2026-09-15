@@ -162,7 +162,7 @@
         </form>
     </div>
 
-    <div class="table-responsive" style="overflow: visible;">
+    <div class="table-responsive" style="overflow-x: auto;">
         <table class="custom-table" id="tabla_herramientas">
             <thead>
                 <tr>
@@ -186,7 +186,12 @@
                 </tr>
                 @endif
                 @foreach($herramientas as $h)
-                <tr class="herramienta-row">
+                @php
+                    $esAgotada = $h->stock_disponible <= 0;
+                    $esMantenimientoCritico = $h->estado === 'Mantenimiento' && $h->creado_en && (strtotime($h->creado_en) < (time() - 15 * 86400));
+                    $tieneAlerta = $esAgotada || $esMantenimientoCritico;
+                @endphp
+                <tr class="herramienta-row" style="{{ $tieneAlerta ? 'background: linear-gradient(90deg, rgba(244, 63, 94, 0.08), transparent); border-left: 4px solid #F43F5E;' : '' }}">
                     <td>
                         <code style="background: #112240; color: #64ffda; padding: 4px 10px; border-radius: 4px; border: 1px solid #233554;">{{ $h->codigo }}</code>
                     </td>
@@ -208,7 +213,18 @@
                                 @endif
                             </div>
                             <div>
-                                <div style="font-weight: 700; color: #ccd6f6; font-size: 1.05rem;">{{ $h->nombre }}</div>
+                                <div style="font-weight: 700; color: #ccd6f6; font-size: 1.05rem;">
+                                    {{ $h->nombre }}
+                                    @if($esAgotada)
+                                        <span class="badge" style="background: rgba(244, 63, 94, 0.1); color: #F43F5E; border: 1px solid #F43F5E; font-size: 0.7rem; margin-left: 0.5rem; font-weight: bold; padding: 2px 6px;">
+                                            AGOTADO
+                                        </span>
+                                    @elseif($esMantenimientoCritico)
+                                        <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid #F59E0B; font-size: 0.7rem; margin-left: 0.5rem; font-weight: bold; padding: 2px 6px;">
+                                            MANTENIMIENTO CRÍTICO
+                                        </span>
+                                    @endif
+                                </div>
                                 <small style="color: #8892b0;">{{ Str::limit($h->descripcion, 38) }}</small>
                             </div>
                         </div>
@@ -262,6 +278,7 @@
         </table>
     </div>
 </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

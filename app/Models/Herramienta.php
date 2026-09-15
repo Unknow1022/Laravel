@@ -14,8 +14,21 @@ class Herramienta extends Model
     protected $fillable = [
         'almacen_id', 'categoria_id', 'codigo', 'nombre', 'descripcion', 'estado', 
         'ubicacion', 'almacen', 'seccion', 'tamano', 'uso',
-        'stock_total', 'stock_disponible', 'stock_minimo'
+        'stock_total', 'stock_disponible', 'stock_minimo', 'creado_en'
     ];
+
+    /**
+     * Auto-asignar creado_en al crear una herramienta nueva.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->creado_en)) {
+                $model->creado_en = now();
+            }
+        });
+    }
 
     protected $casts = [
         'metadata' => 'array',

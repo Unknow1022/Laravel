@@ -40,17 +40,27 @@
             <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No hay vales registrados.</td></tr>
             @else
                 @foreach($vales as $v)
-                <tr>
+                @php
+                    $esVencido = $v->estado === 'Activo' && $v->fecha_limite && (strtotime($v->fecha_limite) < time());
+                @endphp
+                <tr style="{{ $esVencido ? 'background: linear-gradient(90deg, rgba(244, 63, 94, 0.08), transparent); border-left: 4px solid #F43F5E;' : '' }}">
                     <td style="font-weight: bold; color: var(--primary-color);">{{ $v->codigo_vale }}</td>
                     <td>{{ \Carbon\Carbon::parse($v->fecha_creacion)->format('d/m/Y H:i') }}</td>
                     <td>{{ $v->trabajador->nombre }} {{ $v->trabajador->apellidos }}</td>
                     <td><small style="color:var(--text-muted);"><i class="fa-solid fa-user-shield"></i> {{ $v->usuario->nombre }}</small></td>
-                    <td><span class="badge {{ $v->estado }}">{{ $v->estado }}</span></td>
+                    <td>
+                        <span class="badge {{ $v->estado }}">{{ $v->estado }}</span>
+                        @if($esVencido)
+                            <span class="badge" style="background: rgba(244, 63, 94, 0.1); color: #F43F5E; border: 1px solid #F43F5E; font-size: 0.7rem; margin-left: 0.5rem; font-weight: bold; padding: 2px 6px;">
+                                RETRASADO
+                            </span>
+                        @endif
+                    </td>
                     <td>
                         <a href="{{ route('vales.show', $v->id) }}" class="action-btn" title="Ver e Imprimir">
                             <i class="fa-solid fa-eye text-primary"></i>
                         </a>
-                        @if($v->estado !== 'Cerrado' && in_array(Auth::user()->rol, ['Administrador', 'Almacenero']))
+                        @if($v->estado !== 'Devuelto' && in_array(Auth::user()->rol, ['Administrador', 'Almacenero']))
                         <a href="{{ route('vales.procesar_devolucion', $v->id) }}" class="action-btn" title="Procesar Devolución" style="color:var(--warning);">
                             <i class="fa-solid fa-arrow-right-arrow-left"></i>
                         </a>

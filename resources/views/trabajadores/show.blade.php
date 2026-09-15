@@ -38,6 +38,12 @@ $volver_url = $es_inactivo ? route('trabajadores.inactivos') : route('trabajador
 }
 
 .print-header { display: none; }
+
+/* Estilos de badges personalizados */
+.badge.Dañado, .badge.Falla_técnica, .badge.No_es_la_herramienta { background: rgba(239,68,68,0.15); color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
+.badge.Mantenimiento { background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
+.badge.Revision { background: rgba(56,189,248,0.15); color: #38BDF8; border: 1px solid rgba(56,189,248,0.3); }
+.badge.Perdido { background: rgba(139,92,246,0.15); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.3); }
 </style>
 
 <!-- Cabecera para cuando se imprime -->
@@ -144,6 +150,23 @@ $volver_url = $es_inactivo ? route('trabajadores.inactivos') : route('trabajador
                 </div>
             </div>
             @endif
+            @php
+                try {
+                    $sancionActiva = $incidencias->where('estado_disciplinario', 'Activo')->whereNotNull('tipo_falta')->count();
+                } catch (\Exception $e) {
+                    $sancionActiva = 0;
+                }
+            @endphp
+            @if($sancionActiva > 0)
+            <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.4); border-radius:8px; padding:0.75rem; margin-top:0.5rem;">
+                <div style="color:#EF4444; font-weight:700; font-size:0.9rem;">
+                    <i class="fa-solid fa-ban"></i> ⚠️ SUSPENDIDO
+                </div>
+                <div style="color:var(--text-muted); font-size:0.8rem; margin-top:0.25rem;">
+                    Tiene {{ $sancionActiva }} sanción(es) disciplinaria(s) activa(s). No puede retirar herramientas.
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -194,6 +217,67 @@ $volver_url = $es_inactivo ? route('trabajadores.inactivos') : route('trabajador
                             <a href="{{ url('vales/' . $v->id) }}" class="action-btn" title="Ver comprobante del vale" style="color:var(--primary-color);">
                                 <i class="fa-solid fa-file-invoice"></i> Ver Vale
                             </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        <!-- Historial de Sanciones e Incidencias -->
+        <h3 style="color:var(--text-main); margin-top:2.5rem; margin-bottom:1rem;">
+            <i class="fa-solid fa-triangle-exclamation mr-1" style="color:#EF4444;"></i>
+            Historial de Sanciones e Incidencias
+        </h3>
+
+        @if($incidencias->isEmpty())
+        <div style="text-align:center; padding:3rem; color:var(--text-muted); background:var(--surface-color); border-radius:12px; border:1px solid var(--border-color);">
+            <i class="fa-solid fa-shield-halved" style="font-size:2.5rem; opacity:0.4; display:block; margin-bottom:0.75rem; color:#10B981;"></i>
+            Este trabajador no registra incidencias ni sanciones.
+        </div>
+        @else
+        <div class="table-container">
+            <table class="table" style="font-size:0.85rem;">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Herramienta</th>
+                        <th>Tipo de Falta</th>
+                        <th>Gravedad</th>
+                        <th>Medida Correctiva</th>
+                        <th>Estado</th>
+                        <th style="text-align:right;">Sanción (S/)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($incidencias as $inc)
+                    <tr>
+                        <td><small style="color:var(--text-muted);">{{ \Carbon\Carbon::parse($inc->fecha)->format('d/m/Y') }}</small></td>
+                        <td>
+                            <strong style="color:var(--primary-color);">{{ $inc->herramienta->codigo ?? '—' }}</strong><br>
+                            <small style="color:var(--text-muted);">{{ $inc->herramienta->nombre ?? '—' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:rgba(239,68,68,.1); color:#EF4444; border:1px solid rgba(239,68,68,.3); padding:.2rem .55rem; border-radius:20px; font-size:.72rem; font-weight:700;">
+                                {{ $inc->tipo_falta ?? $inc->tipo }}
+                            </span>
+                        </td>
+                        <td>
+                            @php
+                                $g = $inc->gravedad ?? 'Leve';
+                                $gc = $g === 'Muy grave' ? '#EF4444' : ($g === 'Grave' ? '#F97316' : '#22C55E');
+                                $gb = $g === 'Muy grave' ? 'rgba(239,68,68,.1)' : ($g === 'Grave' ? 'rgba(249,115,22,.1)' : 'rgba(34,197,94,.1)');
+                            @endphp
+                            <span style="background:{{ $gb }}; color:{{ $gc }}; border:1px solid {{ $gc }}40; padding:.2rem .55rem; border-radius:20px; font-size:.72rem; font-weight:700; white-space:nowrap;">{{ $g }}</span>
+                        </td>
+                        <td><small style="color:var(--text-muted);">{{ $inc->accion_correctiva ?? '—' }}</small></td>
+                        <td>
+                            @php $estado = $inc->estado_disciplinario ?? '—'; @endphp
+                            <span style="background:{{ $estado === 'Cumplido' ? 'rgba(100,255,218,.1)' : 'rgba(249,115,22,.1)' }}; color:{{ $estado === 'Cumplido' ? 'var(--primary-color)' : '#F97316' }}; border:1px solid; border-color:{{ $estado === 'Cumplido' ? 'rgba(100,255,218,.3)' : 'rgba(249,115,22,.3)' }}; padding:.2rem .55rem; border-radius:20px; font-size:.72rem; font-weight:700;">{{ $estado }}</span>
+                        </td>
+                        <td style="text-align:right; font-weight:bold; color:{{ $inc->monto_sancion > 0 ? '#EF4444' : 'var(--text-muted)' }};">
+                            S/ {{ number_format($inc->monto_sancion, 2) }}
                         </td>
                     </tr>
                     @endforeach

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex · Punto de Acceso de Emergencia</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #060b13;
+            --primary: #64ffda;
+            --danger: #f43f5e;
+            --text: #ccd6f6;
+            --muted: #8892b0;
+            --card: rgba(17, 34, 64, 0.6);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(100, 255, 218, 0.07) 0, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(244, 63, 94, 0.05) 0, transparent 60%);
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .shield-icon {
+            font-size: 4rem;
+            color: var(--primary);
+            text-shadow: 0 0 30px rgba(100, 255, 218, 0.5);
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(100, 255, 218, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .progress-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-outer {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #10b981);
+            border-radius: 20px;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(100, 255, 218, 0.5);
+        }
+
+        .countdown-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-rescue {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #10b981 100%);
+            color: var(--bg);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(100, 255, 218, 0.25);
+        }
+
+        .btn-rescue:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(100, 255, 218, 0.45);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.2rem 0;
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.07);
+        }
+
+        .url-display {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .url-display:hover {
+            border-color: rgba(100, 255, 218, 0.3);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.2rem;
+            transition: color 0.2s;
+        }
+
+        .copy-btn:hover { color: var(--primary); }
+
+        .copy-success {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .copy-success.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .footer-note {
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse-glow {
+            0%  { text-shadow: 0 0 10px rgba(100, 255, 218, 0.3); }
+            100%{ text-shadow: 0 0 30px rgba(100, 255, 218, 0.7); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <i class="fa-solid fa-shield-heart shield-icon"></i>
+        <h1>CORTEX</h1>
+        <p class="subtitle">Punto de Acceso de Emergencia · Sistema Autónomo</p>
+
+        <div class="card">
+            <p>
+                Estás en el <strong style="color: var(--text)">punto de acceso de emergencia</strong> de Cortex.
+                La consola de rescate se abrirá automáticamente para diagnosticar y reparar el sistema.
+            </p>
+
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Conectando con el núcleo...</span>
+                    <span id="pct">0%</span>
+                </div>
+                <div class="progress-bar-outer">
+                    <div class="progress-bar-inner" id="pbar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="countdown-text">
+                Redirigiendo en <span id="countdown">5</span> segundos...
+            </div>
+
+            <a href="/cortex/rescue" class="btn-rescue" id="main-btn">
+                <i class="fa-solid fa-bolt"></i>
+                Abrir Consola de Rescate Ahora
+            </a>
+
+            <div class="divider">o copia la URL directamente</div>
+
+            <div class="url-display" onclick="copyUrl()">
+                <span id="url-text">http://127.0.0.1:8000/cortex/rescue</span>
+                <button class="copy-btn" title="Copiar URL">
+                    <i class="fa-regular fa-copy" id="copy-icon"></i>
+                </button>
+            </div>
+        </div>
+
+        <p class="footer-note">
+            Cortex Rescue Access Point · Solo accesible desde localhost
+        </p>
+    </div>
+
+    <div class="copy-success" id="copy-toast">
+        <i class="fa-solid fa-check"></i> URL copiada al portapapeles
+    </div>
+
+    <script>
+        // --- Auto-redirect countdown ---
+        let seconds = 5;
+        let progress = 0;
+        const countdownEl = document.getElementById('countdown');
+        const pbar = document.getElementById('pbar');
+        const pct = document.getElementById('pct');
+
+        const interval = setInterval(() => {
+            progress += (100 / 50); // 50 ticks in 5 seconds
+            pbar.style.width = Math.min(progress, 100) + '%';
+            pct.textContent = Math.min(Math.round(progress), 100) + '%';
+        }, 100);
+
+        const countdown = setInterval(() => {
+            seconds--;
+            countdownEl.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                clearInterval(interval);
+                window.location.href = '/cortex/rescue';
+            }
+        }, 1000);
+
+        // Detect current host and update URL display
+        const host = window.location.host;
+        document.getElementById('url-text').textContent = `http://${host}/cortex/rescue`;
+
+        // --- Copy URL ---
+        function copyUrl() {
+            const url = `http://${window.location.host}/cortex/rescue`;
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('copy-toast');
+                const icon = document.getElementById('copy-icon');
+                icon.className = 'fa-solid fa-check';
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    icon.className = 'fa-regular fa-copy';
+                }, 2500);
+            });
+        }
+
+        // Stop countdown if user clicks the button manually
+        document.getElementById('main-btn').addEventListener('click', () => {
+            clearInterval(countdown);
+            clearInterval(interval);
+        });
+    </script>
+</body>
+</html>

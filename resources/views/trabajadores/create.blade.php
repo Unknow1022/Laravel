@@ -22,7 +22,8 @@
 
         <div class="form-group">
             <label for="dni">DNI / Documento de Identidad</label>
-            <input type="text" id="dni" name="dni" class="form-control" required autofocus maxlength="8" value="{{ old('dni') }}">
+            <input type="text" id="dni" name="dni" class="form-control" required autofocus maxlength="8" pattern="[0-9]{8}" inputmode="numeric" title="El DNI debe contener exactamente 8 números" value="{{ old('dni') }}">
+            <small class="text-muted">Debe ingresar exactamente 8 dígitos numéricos.</small>
         </div>
 
         <div class="form-group">

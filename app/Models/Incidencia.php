@@ -12,7 +12,9 @@ class Incidencia extends Model
     protected $fillable = [
         'herramienta_id', 'usuario_id', 'trabajador_id', 'vale_id', 
         'fecha', 'cantidad_afectada', 'tipo', 'descripcion', 
-        'monto_sancion', 'estado_sancion', 'reparado'
+        'monto_sancion', 'estado_sancion', 'reparado',
+        // Nuevos campos del módulo disciplinario
+        'tipo_falta', 'gravedad', 'accion_correctiva', 'evidencia', 'estado_disciplinario',
     ];
 
     public function herramienta() {

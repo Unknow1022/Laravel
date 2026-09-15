@@ -44,14 +44,22 @@
                         <option value="{{ $alm->id }}" {{ old('almacen_id') == $alm->id ? 'selected' : '' }}>{{ $alm->nombre }}</option>
                     @endforeach
                 </select>
+                @if($almacenes->isEmpty())
+                    <small style="color:#f59e0b; margin-top:4px; display:block;">
+                        ⚠ No hay almacenes creados. <a href="{{ route('almacenes.create') }}" style="color:#64ffda;">Crear almacén primero</a>
+                    </small>
+                @endif
             </div>
             <div class="form-group" style="flex:1;">
                 <label for="categoria_id">Categoría (Función)</label>
-                <select id="categoria_id" name="categoria_id" class="form-control" required disabled>
+                <select id="categoria_id" name="categoria_id" class="form-control" required disabled
+                    style="background: var(--surface-color, #0d1b2a); color: var(--text-muted, #8892b0);
+                           border: 1px solid var(--border-color, #1e3a5f); opacity: 0.7; cursor: not-allowed;">
                     <option value="">Primero elija un almacén</option>
                 </select>
             </div>
         </div>
+
 
         <div class="form-group">
             <label for="ubicacion">Ubicación Exacta (Estante / Zona)</label>
@@ -102,12 +110,12 @@
     function filterCategories() {
         const almacenId = document.getElementById('almacen_id').value;
         const categoriaSelect = document.getElementById('categoria_id');
-        
+
         categoriaSelect.innerHTML = '<option value="">Seleccione Categoría...</option>';
-        
+
         if (almacenId) {
             const almacen = data.find(a => a.id == almacenId);
-            if (almacen && almacen.categorias.length > 0) {
+            if (almacen && almacen.categorias && almacen.categorias.length > 0) {
                 almacen.categorias.forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat.id;
@@ -115,17 +123,24 @@
                     categoriaSelect.appendChild(option);
                 });
                 categoriaSelect.disabled = false;
+                categoriaSelect.style.opacity = '1';
+                categoriaSelect.style.cursor = 'pointer';
+                categoriaSelect.style.color = 'var(--text-main, #ccd6f6)';
             } else {
-                categoriaSelect.innerHTML = '<option value="">Sin categorías en este almacén</option>';
+                categoriaSelect.innerHTML = '<option value="">⚠ Sin categorías — crea una primero</option>';
                 categoriaSelect.disabled = true;
+                categoriaSelect.style.opacity = '0.7';
+                categoriaSelect.style.cursor = 'not-allowed';
             }
         } else {
             categoriaSelect.innerHTML = '<option value="">Primero elija un almacén</option>';
             categoriaSelect.disabled = true;
+            categoriaSelect.style.opacity = '0.7';
+            categoriaSelect.style.cursor = 'not-allowed';
         }
     }
 
-    // Init if old values exist
+    // Init si hay valores previos (al volver con error)
     window.onload = function() {
         if (document.getElementById('almacen_id').value) {
             filterCategories();
@@ -134,4 +149,5 @@
         }
     }
 </script>
+
 @endsection

@@ -168,6 +168,39 @@ class UsuariosController extends Controller
      */
     public function destroy($id)
     {
-        return back()->with('error', 'Por políticas de seguridad estricta, la eliminación de usuarios está deshabilitada. Si lo requiere, edite sus permisos.');
+        // Solo administradores pueden eliminar usuarios
+        if (Auth::user()->rol !== 'Administrador') {
+            return abort(403);
+        }
+
+        $usuario = Usuario::findOrFail($id);
+
+        // No puede eliminarse a sí mismo
+        if ($usuario->id === Auth::id()) {
+            return back()->with('error', 'No puedes eliminar tu propia cuenta mientras tienes la sesión activa.');
+        }
+
+        // Guardar datos antes de eliminar para el log
+        $usuarioEliminadoNombre  = $usuario->nombre;
+        $usuarioEliminadoUsuario = $usuario->usuario;
+        $usuarioEliminadoRol     = $usuario->rol;
+
+        $usuario->delete();
+
+        // Registrar en el log: quién eliminó y a quién
+        $ejecutorNombre  = Auth::user()->nombre;
+        $ejecutorUsuario = Auth::user()->usuario;
+        $ejecutorRol     = Auth::user()->rol;
+
+        Log::create([
+            'usuario_id' => Auth::id(),
+            'accion'     => 'ELIMINAR',
+            'tabla'      => 'usuarios',
+            'item_id'    => $id,
+            'descripcion' => "{$ejecutorRol} '{$ejecutorUsuario}' ({$ejecutorNombre}) eliminó al usuario '{$usuarioEliminadoUsuario}' ({$usuarioEliminadoNombre}) con rol {$usuarioEliminadoRol}.",
+            'fecha'      => now()
+        ]);
+
+        return redirect()->route('usuarios.index')->with('eliminado', true);
     }
 }

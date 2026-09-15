@@ -3,7 +3,7 @@
 @section('title', 'Cortex Monitor - Centro de Mando')
 
 @section('content')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('vendor/chartjs/chart.min.js') }}"></script>
 
 <!-- HEADER ESTRATÉGICO -->
 <div class="dashboard-hero mb-5 mt-5">
@@ -18,12 +18,12 @@
         <div class="cortex-card-premium">
             <div class="cortex-header-neural">
                 <div class="cortex-avatar-orb">
-                    <div class="node-dot pulse" style="position: absolute; top: 2px; right: 2px; background: #64FFDA;"></div>
+                    <div class="node-dot pulse" style="position: absolute; top: 2px; right: 2px; background: var(--primary-color);"></div>
                     <i class="fa-solid fa-brain-circuit"></i>
                 </div>
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="m-0 text-white" style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px;">Cortex Assistant <span class="text-muted" style="font-weight: 300;">| Core v4.2</span></h2>
+                        <h2 class="m-0" style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main);">Cortex Assistant <span class="text-muted" style="font-weight: 300;">| Core v4.2</span></h2>
                         <span class="cortex-status-badge nominal">
                             <i class="fa-solid fa-signal mr-2"></i> Estado Nominal
                         </span>
@@ -164,12 +164,15 @@
     </div>
 </div>
 
-<!-- ACCESOS RÁPIDOS DINÁMICOS -->
+<!-- ACCESOS RÁPIDOS DINÁMICOS (Condicionales por Rol) -->
 <div class="grid-layout mb-5">
     <div class="col-12">
         <div class="glass-container p-4">
             <h3 class="container-title mb-4"><i class="fa-solid fa-bolt mr-2"></i>Panel de Acción Rápida</h3>
             <div class="row">
+
+                @if(in_array(Auth::user()->rol, ['Administrador', 'Almacenero']))
+                {{-- Acciones de escritura: Solo Administrador y Almacenero --}}
                 <div class="col-md-3">
                     <a href="{{ route('herramientas.create') }}" class="quick-card-v2">
                         <i class="fa-solid fa-wrench"></i>
@@ -185,6 +188,46 @@
                         <div class="q-meta">
                             <strong>Personal</strong>
                             <span>Añadir nuevo trabajador</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ route('vales.create') }}" class="quick-card-v2">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <div class="q-meta">
+                            <strong>Nuevo Vale</strong>
+                            <span>Emitir vale de salida</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ route('herramientas.ubicaciones') }}" class="quick-card-v2">
+                        <i class="fa-solid fa-map-marked-alt"></i>
+                        <div class="q-meta">
+                            <strong>Ubicaciones</strong>
+                            <span>Mapa de red logística</span>
+                        </div>
+                    </a>
+                </div>
+                @endif
+
+                @if(Auth::user()->rol === 'Supervisor')
+                {{-- Acciones de lectura: Solo Supervisor --}}
+                <div class="col-md-3">
+                    <a href="{{ route('herramientas.index') }}" class="quick-card-v2">
+                        <i class="fa-solid fa-wrench"></i>
+                        <div class="q-meta">
+                            <strong>Catálogo</strong>
+                            <span>Ver inventario de activos</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ route('trabajadores.index') }}" class="quick-card-v2">
+                        <i class="fa-solid fa-users"></i>
+                        <div class="q-meta">
+                            <strong>Personal</strong>
+                            <span>Consultar trabajadores</span>
                         </div>
                     </a>
                 </div>
@@ -206,6 +249,12 @@
                         </div>
                     </a>
                 </div>
+                @endif
+
+                @if(Auth::user()->rol === 'Administrador')
+                {{-- Acciones exclusivas del Administrador (reemplaza uno de los botones) --}}
+                @endif
+
             </div>
         </div>
     </div>

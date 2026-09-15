@@ -11,7 +11,7 @@
     <p style="color: var(--text-muted); margin-bottom: 2rem;">
         No tienes permisos para acceder a esta sección del sistema.
     </p>
-    <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('dashboard') }}"
+    <a href="{{ route('login') }}"
        style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(100,255,218,0.1); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none;">
         <i class="fa-solid fa-arrow-left"></i> Volver al inicio
     </a>

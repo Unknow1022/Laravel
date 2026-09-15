@@ -1,12 +1,12 @@
 /* ============================================================
-   table.css — Almacén Inteligente (Dark Mode)
+   table.css — Almacén Inteligente v2.0 (Light Mode)
    ============================================================ */
 
 /* TABLAS MODERNAS */
 .table-container {
     background: var(--surface-color);
     border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     overflow: hidden;
     margin-top: 1rem;
@@ -18,19 +18,20 @@
 }
 
 .table th, .table td {
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.25rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-main);
 }
 
 .table th {
-    background-color: #112240;
-    font-weight: 500;
+    background-color: #F8FAFC;
+    font-weight: 600;
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border-color);
 }
 
 .table tr:last-child td {
@@ -38,11 +39,11 @@
 }
 
 .table tr:hover td {
-    background-color: rgba(100, 255, 218, 0.03);
+    background-color: rgba(13, 148, 136, 0.03);
 }
 
 /* ============================================================
-   BADGES DE ESTADO (Dark Mode)
+   BADGES DE ESTADO (Light Mode)
    ============================================================ */
 .badge {
     padding: 0.25rem 0.75rem;
@@ -52,18 +53,22 @@
     letter-spacing: 0.03em;
     display: inline-block;
 }
-.badge.Disponible    { background: rgba(16,185,129,0.15);  color: #10B981; border: 1px solid rgba(16,185,129,0.3); }
-.badge.Prestado      { background: rgba(245,158,11,0.15);  color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
-.badge.Mantenimiento { background: rgba(56,189,248,0.15);  color: #38BDF8; border: 1px solid rgba(56,189,248,0.3); }
-.badge.Perdido       { background: rgba(239,68,68,0.15);   color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
-.badge.Dañado        { background: rgba(239,68,68,0.15);   color: #EF4444; border: 1px solid rgba(239,68,68,0.3); }
-.badge.Activo        { background: rgba(245,158,11,0.15);  color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
-.badge.Devuelto      { background: rgba(16,185,129,0.15);  color: #10B981; border: 1px solid rgba(16,185,129,0.3); }
+.badge.Disponible    { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+.badge.Prestado      { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+.badge.Mantenimiento { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.badge.Perdido       { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.badge.Dañado        { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.badge.Activo        { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+.badge.Devuelto      { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+.badge.Vencido       { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+.badge.Parcial       { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.badge.Baja          { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; }
+.badge.Inactivo      { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; }
 
 /* Status en mantenimiento */
 .dt-status { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; }
-.dts-Mantenimiento { background: rgba(56,189,248,0.15); color: #38BDF8; }
-.dts-Dañado        { background: rgba(239,68,68,0.15);  color: #EF4444; }
+.dts-Mantenimiento { background: #EFF6FF; color: #2563EB; }
+.dts-Dañado        { background: #FEF2F2; color: #DC2626; }
 
 /* ============================================================
    BOTONES DE ACCIÓN EN TABLA
@@ -77,9 +82,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    border: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
 }
-.action-btn:hover          { background: rgba(100,255,218,0.1); color: var(--primary-color); }
-.action-btn.delete:hover   { background: rgba(239,68,68,0.1);   color: var(--danger); }
+.action-btn:hover          { background: var(--primary-light); color: var(--primary-color); }
+.action-btn.delete         { background: var(--danger-light); color: var(--danger); border: none; cursor: pointer; }
+.action-btn.delete:hover   { background: rgba(220,38,38,0.12); color: var(--danger); }
 .text-primary              { color: var(--primary-color); }
 
 /* ============================================================
@@ -108,21 +121,22 @@
 
 /* Botón secundario */
 .btn-secondary {
-    background: rgba(100,255,218,0.1);
+    background: var(--primary-light);
     color: var(--primary-color);
-    border: 1px solid var(--primary-color);
+    border: 1px solid rgba(13, 148, 136, 0.25);
 }
 .btn-secondary:hover {
-    background: rgba(100,255,218,0.2);
+    background: rgba(13, 148, 136, 0.15);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
 /* ============================================================
-   ALERTAS EN DARK MODE
+   ALERTAS
    ============================================================ */
 .alert {
     padding: 1rem 1.25rem;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-bottom: 1.25rem;
     font-weight: 500;
     display: flex;
@@ -130,24 +144,28 @@
     gap: 0.6rem;
 }
 .alert-danger {
-    background: rgba(239,68,68,0.1);
-    color: #EF4444;
-    border: 1px solid rgba(239,68,68,0.3);
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
 }
 .alert-success {
-    background: rgba(16,185,129,0.1);
-    color: #10B981;
-    border: 1px solid rgba(16,185,129,0.3);
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
 }
 .alert-warning {
-    background: rgba(245,158,11,0.1);
-    color: #F59E0B;
-    border: 1px solid rgba(245,158,11,0.3);
+    background: #FFFBEB;
+    color: #92400E;
+    border: 1px solid #FDE68A;
 }
 
-/* Auth page form-control override (light) */
+/* Auth page form-control override */
 .auth-card .form-control {
-    background: #112240;
-    color: var(--text-main);
-    border-color: var(--border-color);
+    background: #F8FAFC;
+    color: #1E293B;
+    border-color: #E2E8F0;
+}
+.auth-card .form-control:focus {
+    background: #FFFFFF;
+    border-color: var(--primary-color);
 }

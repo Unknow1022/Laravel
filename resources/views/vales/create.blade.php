@@ -29,9 +29,18 @@
                 <select id="trabajador_id" name="trabajador_id" class="form-control" required>
                     <option value="">-- Seleccione un trabajador --</option>
                     @foreach($trabajadores as $t)
-                        <option value="{{ $t->id }}" {{ old('trabajador_id') == $t->id ? 'selected' : '' }}>{{ $t->dni }} - {{ $t->nombre }} {{ $t->apellidos }}</option>
+                        @php $suspendido = in_array($t->id, $suspendidosIds ?? []); @endphp
+                        <option value="{{ $t->id }}"
+                            data-suspendido="{{ $suspendido ? '1' : '0' }}"
+                            {{ old('trabajador_id') == $t->id ? 'selected' : '' }}
+                            style="{{ $suspendido ? 'color: #EF4444;' : '' }}">
+                            {{ $t->dni }} - {{ $t->nombre }} {{ $t->apellidos }}{{ $suspendido ? ' ⚠️ SUSPENDIDO' : '' }}
+                        </option>
                     @endforeach
                 </select>
+                <div id="suspension-alert" style="display:none; margin-top:.5rem; padding:.7rem 1rem; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.4); border-radius:8px; color:#EF4444; font-size:.85rem;">
+                    <i class="fa-solid fa-ban mr-1"></i> <strong>Trabajador suspendido.</strong> Tiene una sanción disciplinaria activa. No puede retirar herramientas.
+                </div>
             </div>
         </div>
 
@@ -75,8 +84,8 @@
 
 <!-- jQuery and Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="{{ asset('vendor/select2/css/select2.min.css') }}" rel="stylesheet" />
+<script src="{{ asset('vendor/select2/js/select2.min.js') }}"></script>
 
 <style>
 /* Custom Select2 Dark Theme to match the site */
@@ -117,6 +126,19 @@ $(document).ready(function() {
         placeholder: '-- Seleccione un trabajador --',
         allowClear: true,
         width: '100%'
+    });
+
+    // Alerta de suspensión al seleccionar trabajador
+    $('#trabajador_id').on('change', function() {
+        let opt = $(this).find(':selected');
+        let suspendido = opt.data('suspendido');
+        if (suspendido == '1') {
+            $('#suspension-alert').show();
+            $('button[type="submit"]').prop('disabled', true).css('opacity', '.5');
+        } else {
+            $('#suspension-alert').hide();
+            $('button[type="submit"]').prop('disabled', false).css('opacity', '1');
+        }
     });
 
     // Filtro de búsqueda rápida para herramientas
